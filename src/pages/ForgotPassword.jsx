@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-const Login = () => {
+
+const ForgotPassword = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
 
@@ -12,7 +13,7 @@ const Login = () => {
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-blue-400/20"></div>
           <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-blue-300/10"></div>
 
-          {/* Logo / Company */}
+          {/* Logo */}
           <div className="relative z-10">
             <div className="flex items-center gap-3">
 
@@ -37,18 +38,18 @@ const Login = () => {
           <div className="relative z-10 max-w-lg">
 
             <p className="text-blue-200 uppercase tracking-[0.2em] text-sm font-semibold mb-5">
-              Welcome to Citizen App
+              Account Recovery
             </p>
 
             <h2 className="text-4xl xl:text-5xl font-bold leading-tight mb-6">
-              Smarter Services.
+              Secure Access.
               <br />
-              Better Experience.
+              Easy Recovery.
             </h2>
 
             <p className="text-blue-100 text-lg leading-relaxed max-w-md">
-              Access essential citizen services, submit requests,
-              and stay updated through one simple digital platform.
+              Recover access to your Citizen App account
+              securely and continue using essential citizen services.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -58,11 +59,11 @@ const Login = () => {
               </div>
 
               <div className="px-4 py-2 rounded-full bg-white/10 border border-white/10 text-sm">
-                Simple
+                Private
               </div>
 
               <div className="px-4 py-2 rounded-full bg-white/10 border border-white/10 text-sm">
-                Transparent
+                Reliable
               </div>
 
             </div>
@@ -77,7 +78,7 @@ const Login = () => {
         </div>
 
 
-        {/* RIGHT SIDE - LOGIN FORM */}
+        {/* RIGHT SIDE - FORGOT PASSWORD */}
         <div className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
 
           <div className="w-full max-w-md">
@@ -106,15 +107,16 @@ const Login = () => {
             <div className="mb-8">
 
               <p className="text-sm font-semibold text-blue-700 mb-2">
-                ACCOUNT LOGIN
+                ACCOUNT RECOVERY
               </p>
 
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-                Welcome back
+                Forgot password?
               </h2>
 
               <p className="mt-3 text-slate-500">
-                Login to continue accessing your citizen services.
+                Enter your email or mobile number and we'll help
+                you recover your account.
               </p>
 
             </div>
@@ -123,7 +125,7 @@ const Login = () => {
             {/* Form */}
             <form className="space-y-5">
 
-              {/* Email */}
+              {/* Email / Mobile */}
               <div>
 
                 <label
@@ -143,78 +145,28 @@ const Login = () => {
               </div>
 
 
-              {/* Password */}
-              <div>
-
-                <div className="flex items-center justify-between mb-2">
-
-                  <label
-                    htmlFor="password"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Password
-                  </label>
-
-                 <Link
-  to="/forgot-password"
-  className="text-sm font-semibold text-blue-700 hover:text-blue-900 transition"
->
-  Forgot password?
-</Link>
-
-                </div>
-
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
-                />
-
-              </div>
-
-
-              {/* Remember */}
-              <div className="flex items-center gap-2">
-
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="w-4 h-4 accent-blue-700"
-                />
-
-                <label
-                  htmlFor="remember"
-                  className="text-sm text-slate-600"
-                >
-                  Remember me
-                </label>
-
-              </div>
-
-
-              {/* Login Button */}
+              {/* Submit */}
               <button
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-blue-800 text-white font-semibold shadow-lg shadow-blue-800/20 hover:bg-blue-900 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Login
+                Continue
               </button>
 
             </form>
 
 
-            {/* Register */}
+            {/* Back to Login */}
             <div className="mt-8 text-center">
 
               <p className="text-sm text-slate-500">
-                Don't have an account?{" "}
+                Remember your password?{" "}
                 <Link
-  to="/register"
-  className="font-semibold text-blue-700 hover:text-blue-900 transition"
->
-  Create an account
-</Link>
+                  to="/login"
+                  className="font-semibold text-blue-700 hover:text-blue-900 transition"
+                >
+                  Back to Login
+                </Link>
               </p>
 
             </div>
@@ -239,4 +191,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;

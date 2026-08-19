@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-const Login = () => {
+const Register = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
 
@@ -37,18 +37,18 @@ const Login = () => {
           <div className="relative z-10 max-w-lg">
 
             <p className="text-blue-200 uppercase tracking-[0.2em] text-sm font-semibold mb-5">
-              Welcome to Citizen App
+              Join Citizen App
             </p>
 
             <h2 className="text-4xl xl:text-5xl font-bold leading-tight mb-6">
-              Smarter Services.
+              One Account.
               <br />
-              Better Experience.
+              Better Services.
             </h2>
 
             <p className="text-blue-100 text-lg leading-relaxed max-w-md">
-              Access essential citizen services, submit requests,
-              and stay updated through one simple digital platform.
+              Create your account and access essential citizen
+              services through one simple digital platform.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -77,7 +77,7 @@ const Login = () => {
         </div>
 
 
-        {/* RIGHT SIDE - LOGIN FORM */}
+        {/* RIGHT SIDE - REGISTER FORM */}
         <div className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
 
           <div className="w-full max-w-md">
@@ -106,15 +106,15 @@ const Login = () => {
             <div className="mb-8">
 
               <p className="text-sm font-semibold text-blue-700 mb-2">
-                ACCOUNT LOGIN
+                CREATE ACCOUNT
               </p>
 
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-                Welcome back
+                Get started
               </h2>
 
               <p className="mt-3 text-slate-500">
-                Login to continue accessing your citizen services.
+                Create your account to access citizen services.
               </p>
 
             </div>
@@ -123,7 +123,27 @@ const Login = () => {
             {/* Form */}
             <form className="space-y-5">
 
-              {/* Email */}
+              {/* Full Name */}
+              <div>
+
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-slate-700 mb-2"
+                >
+                  Full Name
+                </label>
+
+                <input
+                  id="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                />
+
+              </div>
+
+
+              {/* Email / Mobile */}
               <div>
 
                 <label
@@ -146,74 +166,64 @@ const Login = () => {
               {/* Password */}
               <div>
 
-                <div className="flex items-center justify-between mb-2">
-
-                  <label
-                    htmlFor="password"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Password
-                  </label>
-
-                 <Link
-  to="/forgot-password"
-  className="text-sm font-semibold text-blue-700 hover:text-blue-900 transition"
->
-  Forgot password?
-</Link>
-
-                </div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-slate-700 mb-2"
+                >
+                  Password
+                </label>
 
                 <input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
                 />
 
               </div>
 
 
-              {/* Remember */}
-              <div className="flex items-center gap-2">
-
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="w-4 h-4 accent-blue-700"
-                />
+              {/* Confirm Password */}
+              <div>
 
                 <label
-                  htmlFor="remember"
-                  className="text-sm text-slate-600"
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-slate-700 mb-2"
                 >
-                  Remember me
+                  Confirm Password
                 </label>
+
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                />
 
               </div>
 
 
-              {/* Login Button */}
+              {/* Register Button */}
               <button
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-blue-800 text-white font-semibold shadow-lg shadow-blue-800/20 hover:bg-blue-900 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Login
+                Create Account
               </button>
 
             </form>
 
 
-            {/* Register */}
+            {/* Login */}
             <div className="mt-8 text-center">
 
               <p className="text-sm text-slate-500">
-                Don't have an account?{" "}
+                Already have an account?{" "}
                 <Link
-  to="/register"
+  to="/login"
   className="font-semibold text-blue-700 hover:text-blue-900 transition"
 >
-  Create an account
+  Login
 </Link>
               </p>
 
@@ -239,4 +249,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
