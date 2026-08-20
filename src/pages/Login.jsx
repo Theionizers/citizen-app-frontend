@@ -20,18 +20,9 @@ const Login = () => {
             <img
   src="/ozoco-logo.png"
   alt="OZOCO"
-  className="h-12 w-auto object-contain"
+  className="h-15 w-auto object-contain"
 />
 
-            <div>
-              <h1 className="font-bold text-lg text-slate-900">
-                OZOCO
-              </h1>
-
-              <p className="text-xs text-slate-500">
-                AI Citizen Service Platform
-              </p>
-            </div>
 
           </div>
 
