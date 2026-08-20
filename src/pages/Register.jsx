@@ -1,129 +1,211 @@
 import { Link } from "react-router-dom";
+
 const Register = () => {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FFF8F1] flex items-center justify-center p-4">
 
-      <div className="w-full max-w-6xl min-h-[650px] bg-white rounded-3xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
+      <div className="w-full max-w-7xl min-h-[680px] bg-white rounded-[28px] shadow-xl overflow-hidden grid lg:grid-cols-2 border border-orange-100">
 
-        {/* LEFT SIDE - COMPANY BRANDING */}
-        <div className="hidden lg:flex relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-blue-700 p-12 text-white flex-col justify-between">
+        {/* ================= LEFT SIDE ================= */}
+        <div className="relative overflow-hidden bg-[#FFF3E8] px-8 py-10 sm:px-12 lg:px-14 flex flex-col justify-between">
 
-          {/* Decorative circles */}
-          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-blue-400/20"></div>
-          <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-blue-300/10"></div>
+          {/* Decorative shapes */}
+          <div className="absolute -top-28 -right-28 w-80 h-80 rounded-full bg-orange-200/40" />
 
-          {/* Logo / Company */}
+          <div className="absolute bottom-[-100px] left-[-80px] w-72 h-72 rounded-full bg-orange-100" />
+
+
+          {/* LOGO */}
           <div className="relative z-10">
-            <div className="flex items-center gap-3">
 
-              <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-                <span className="text-xl font-bold">C</span>
-              </div>
+            <img
+              src="/ozoco-logo.png"
+              alt="OZOCO"
+              className="h-12 w-auto object-contain"
+            />
 
-              <div>
-                <h1 className="text-xl font-bold tracking-wide">
-                  Citizen App
-                </h1>
-
-                <p className="text-xs text-blue-200">
-                  Digital Citizen Services
-                </p>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Main branding */}
-          <div className="relative z-10 max-w-lg">
-
-            <p className="text-blue-200 uppercase tracking-[0.2em] text-sm font-semibold mb-5">
-              Join Citizen App
+            <p className="text-xs text-slate-500 mt-1 ml-1">
+              AI Citizen Service Platform
             </p>
 
-            <h2 className="text-4xl xl:text-5xl font-bold leading-tight mb-6">
-              One Account.
+          </div>
+
+
+          {/* MAIN CONTENT */}
+          <div className="relative z-10 max-w-xl mt-12 lg:mt-0">
+
+            <p className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-4">
+              Join OZOCO
+            </p>
+
+            <h2 className="text-4xl sm:text-5xl font-bold leading-[1.1] text-slate-900">
+
+              One platform.
               <br />
-              Better Services.
+
+              <span className="text-orange-600">
+                Every civic request.
+              </span>
+
+              <br />
+
+              One simpler experience.
+
             </h2>
 
-            <p className="text-blue-100 text-lg leading-relaxed max-w-md">
-              Create your account and access essential citizen
-              services through one simple digital platform.
+            <p className="mt-6 text-slate-600 text-base sm:text-lg leading-relaxed max-w-lg">
+
+              Create your account to submit civic problems, receive
+              service guidance, and track your requests from submission
+              to resolution.
+
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
 
-              <div className="px-4 py-2 rounded-full bg-white/10 border border-white/10 text-sm">
-                Secure
+            {/* FEATURES */}
+            <div className="mt-8 space-y-4">
+
+              {/* Feature 1 */}
+              <div className="flex items-start gap-4">
+
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center shadow-sm text-lg">
+                  📝
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    Report Your Problem
+                  </h3>
+
+                  <p className="text-sm text-slate-500 mt-1">
+                    Submit details, photos, or documents related to your issue.
+                  </p>
+                </div>
+
               </div>
 
-              <div className="px-4 py-2 rounded-full bg-white/10 border border-white/10 text-sm">
-                Simple
+
+              {/* Feature 2 */}
+              <div className="flex items-start gap-4">
+
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center shadow-sm text-lg">
+                  ✨
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    Get the Right Service
+                  </h3>
+
+                  <p className="text-sm text-slate-500 mt-1">
+                    AI helps understand your request and identify the appropriate service.
+                  </p>
+                </div>
+
               </div>
 
-              <div className="px-4 py-2 rounded-full bg-white/10 border border-white/10 text-sm">
-                Transparent
+
+              {/* Feature 3 */}
+              <div className="flex items-start gap-4">
+
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center shadow-sm text-lg">
+                  📍
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    Smart Department Routing
+                  </h3>
+
+                  <p className="text-sm text-slate-500 mt-1">
+                    Your request can be routed to the appropriate department and jurisdiction.
+                  </p>
+                </div>
+
+              </div>
+
+
+              {/* Feature 4 */}
+              <div className="flex items-start gap-4">
+
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center shadow-sm text-lg">
+                  🔎
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    Track Your Request
+                  </h3>
+
+                  <p className="text-sm text-slate-500 mt-1">
+                    Stay informed about your request throughout the process.
+                  </p>
+                </div>
+
               </div>
 
             </div>
 
           </div>
 
-          {/* Footer */}
-          <div className="relative z-10 text-sm text-blue-200">
-            © 2026 Citizen App. All rights reserved.
+
+          {/* FOOTER */}
+          <div className="relative z-10 mt-10 flex items-center gap-6 text-xs text-slate-500">
+
+            <span>Secure</span>
+
+            <span className="w-1 h-1 rounded-full bg-orange-400" />
+
+            <span>Transparent</span>
+
+            <span className="w-1 h-1 rounded-full bg-orange-400" />
+
+            <span>Citizen-focused</span>
+
           </div>
 
         </div>
 
 
-        {/* RIGHT SIDE - REGISTER FORM */}
-        <div className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
+        {/* ================= RIGHT SIDE ================= */}
+        <div className="flex items-center justify-center px-6 py-10 sm:px-12 lg:px-16">
 
           <div className="w-full max-w-md">
 
-            {/* Mobile Logo */}
-            <div className="lg:hidden flex items-center gap-3 mb-10">
+            {/* MOBILE LOGO */}
+            <div className="lg:hidden mb-8">
 
-              <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold">
-                C
-              </div>
-
-              <div>
-                <h1 className="font-bold text-lg text-slate-900">
-                  Citizen App
-                </h1>
-
-                <p className="text-xs text-slate-500">
-                  Digital Citizen Services
-                </p>
-              </div>
+              <img
+                src="/ozoco-logo.png"
+                alt="OZOCO"
+                className="h-10 w-auto object-contain"
+              />
 
             </div>
 
 
-            {/* Heading */}
-            <div className="mb-8">
+            {/* HEADING */}
+            <div className="mb-7">
 
-              <p className="text-sm font-semibold text-blue-700 mb-2">
+              <p className="text-sm font-semibold text-orange-600 mb-2">
                 CREATE ACCOUNT
               </p>
 
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-                Get started
+                Get started with OZOCO
               </h2>
 
               <p className="mt-3 text-slate-500">
-                Create your account to access citizen services.
+                Create your account to access citizen services and manage your requests.
               </p>
 
             </div>
 
 
-            {/* Form */}
-            <form className="space-y-5">
+            {/* FORM */}
+            <form className="space-y-4">
 
-              {/* Full Name */}
+              {/* FULL NAME */}
               <div>
 
                 <label
@@ -137,33 +219,53 @@ const Register = () => {
                   id="name"
                   type="text"
                   placeholder="Enter your full name"
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
 
               </div>
 
 
-              {/* Email / Mobile */}
+              {/* EMAIL */}
               <div>
 
                 <label
                   htmlFor="email"
                   className="block text-sm font-medium text-slate-700 mb-2"
                 >
-                  Email or Mobile Number
+                  Email Address
                 </label>
 
                 <input
                   id="email"
-                  type="text"
-                  placeholder="Enter your email or mobile number"
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                  type="email"
+                  placeholder="Enter your email address"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
 
               </div>
 
 
-              {/* Password */}
+              {/* MOBILE */}
+              <div>
+
+                <label
+                  htmlFor="mobile"
+                  className="block text-sm font-medium text-slate-700 mb-2"
+                >
+                  Mobile Number
+                </label>
+
+                <input
+                  id="mobile"
+                  type="tel"
+                  placeholder="Enter your mobile number"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+                />
+
+              </div>
+
+
+              {/* PASSWORD */}
               <div>
 
                 <label
@@ -177,13 +279,13 @@ const Register = () => {
                   id="password"
                   type="password"
                   placeholder="Create a password"
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
 
               </div>
 
 
-              {/* Confirm Password */}
+              {/* CONFIRM PASSWORD */}
               <div>
 
                 <label
@@ -197,44 +299,74 @@ const Register = () => {
                   id="confirmPassword"
                   type="password"
                   placeholder="Confirm your password"
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
 
               </div>
 
 
-              {/* Register Button */}
+              {/* TERMS */}
+              <div className="flex items-start gap-2 pt-1">
+
+                <input
+                  id="terms"
+                  type="checkbox"
+                  className="w-4 h-4 mt-0.5 accent-orange-600"
+                />
+
+                <label
+                  htmlFor="terms"
+                  className="text-sm text-slate-500 leading-relaxed"
+                >
+                  I agree to the{" "}
+                  <span className="font-medium text-orange-600">
+                    Terms of Service
+                  </span>{" "}
+                  and{" "}
+                  <span className="font-medium text-orange-600">
+                    Privacy Policy
+                  </span>
+                  .
+                </label>
+
+              </div>
+
+
+              {/* REGISTER BUTTON */}
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-xl bg-blue-800 text-white font-semibold shadow-lg shadow-blue-800/20 hover:bg-blue-900 hover:-translate-y-0.5 transition-all duration-200"
+                className="w-full py-3.5 rounded-xl bg-orange-600 text-white font-semibold shadow-lg shadow-orange-600/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Create Account
+                Create Account →
               </button>
 
             </form>
 
 
-            {/* Login */}
-            <div className="mt-8 text-center">
+            {/* LOGIN LINK */}
+            <div className="mt-7 text-center">
 
               <p className="text-sm text-slate-500">
+
                 Already have an account?{" "}
+
                 <Link
-  to="/login"
-  className="font-semibold text-blue-700 hover:text-blue-900 transition"
->
-  Login
-</Link>
+                  to="/login"
+                  className="font-semibold text-orange-600 hover:text-orange-700 transition"
+                >
+                  Sign in
+                </Link>
+
               </p>
 
             </div>
 
 
-            {/* Security message */}
-            <div className="mt-8 pt-6 border-t border-slate-100">
+            {/* SECURITY */}
+            <div className="mt-7 pt-5 border-t border-slate-100">
 
               <p className="text-xs text-center text-slate-400">
-                Your information is protected with secure authentication.
+                🔒 Your account information is protected with secure authentication.
               </p>
 
             </div>
