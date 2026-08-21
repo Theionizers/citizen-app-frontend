@@ -3,131 +3,115 @@ import { Link } from "react-router-dom";
 const Login = () => {
   return (
     <div className="min-h-screen bg-[#FFF8F1] flex items-center justify-center p-4">
-
       <div className="w-full max-w-7xl min-h-[680px] bg-white rounded-[28px] shadow-xl overflow-hidden grid lg:grid-cols-2 border border-orange-100">
 
         {/* ================= LEFT SIDE ================= */}
-        <div className="relative overflow-hidden bg-[#FFF3E8] px-8 py-10 sm:px-12 lg:px-14 flex flex-col justify-between">
+        <div className="relative overflow-hidden px-8 py-10 sm:px-12 lg:px-14 flex flex-col justify-between">
 
-          {/* Decorative elements */}
-          <div className="absolute -top-28 -right-28 w-80 h-80 rounded-full bg-orange-200/40" />
+          {/* Background Image */}
+          <img
+            src="/login-bg.jpg"
+            alt="Citizen services"
+            className="absolute inset-0 w-full h-full object-cover blur-[3px] scale-105"
+          />
 
-          <div className="absolute bottom-[-100px] left-[-80px] w-72 h-72 rounded-full bg-orange-100" />
+          {/* Dark / Orange Overlay */}
+          <div className="absolute inset-0 bg-slate-950/60" />
+
+          {/* Subtle Orange Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-950/40 via-transparent to-slate-950/50" />
 
           {/* HEADER */}
           <div className="relative z-10 flex items-center gap-3">
-
             <img
-  src="/ozoco-logo.png"
-  alt="OZOCO"
-  className="h-15 w-auto object-contain"
-/>
-
-
+              src="/ozoco-logo.png"
+              alt="OZOCO"
+              className="h-15 w-auto object-contain"
+            />
           </div>
-
 
           {/* MAIN CONTENT */}
           <div className="relative z-10 max-w-xl mt-12 lg:mt-0">
 
-            <p className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-4">
+            <p className="text-sm font-semibold text-orange-300 uppercase tracking-wider mb-4">
               Citizen Service Platform
             </p>
 
-            <h2 className="text-4xl sm:text-5xl font-bold leading-[1.1] text-slate-900">
-
+            <h2 className="text-4xl sm:text-5xl font-bold leading-[1.1] text-white">
               Resolve issues.
               <br />
-
-              <span className="text-orange-600">
+              <span className="text-orange-300">
                 Track progress.
               </span>
-
               <br />
-
               Stay informed.
-
             </h2>
 
-            <p className="mt-6 text-slate-600 text-base sm:text-lg leading-relaxed max-w-lg">
-
+            <p className="mt-6 text-slate-200 text-base sm:text-lg leading-relaxed max-w-lg">
               Submit your civic problem through one digital platform.
               Get guided to the right service and track your request
               from submission to resolution.
-
             </p>
-
 
             {/* FEATURES */}
             <div className="mt-8 space-y-4">
 
               {/* Feature 1 */}
               <div className="flex items-start gap-4">
-
-                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center text-orange-600 shadow-sm">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center text-orange-300">
                   📝
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-white">
                     Submit a Problem
                   </h3>
 
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-slate-300 mt-1">
                     Describe your issue and submit supporting documents or images.
                   </p>
                 </div>
-
               </div>
-
 
               {/* Feature 2 */}
               <div className="flex items-start gap-4">
-
-                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center text-orange-600 shadow-sm">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center text-orange-300">
                   ✨
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-white">
                     AI-Powered Classification
                   </h3>
 
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-slate-300 mt-1">
                     Your request is analysed to identify the appropriate service.
                   </p>
                 </div>
-
               </div>
-
 
               {/* Feature 3 */}
               <div className="flex items-start gap-4">
-
-                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center text-orange-600 shadow-sm">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center text-orange-300">
                   🔎
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-white">
                     Track Your Request
                   </h3>
 
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-slate-300 mt-1">
                     Follow your ticket and stay updated throughout the process.
                   </p>
                 </div>
-
               </div>
 
             </div>
-
           </div>
 
-
           {/* BOTTOM */}
-          <div className="relative z-10 mt-10 flex items-center gap-6 text-xs text-slate-500">
-
+          <div className="relative z-10 mt-10 flex items-center gap-6 text-xs text-slate-300">
             <span>Secure</span>
 
             <span className="w-1 h-1 rounded-full bg-orange-400" />
@@ -137,9 +121,7 @@ const Login = () => {
             <span className="w-1 h-1 rounded-full bg-orange-400" />
 
             <span>Citizen-focused</span>
-
           </div>
-
         </div>
 
 
@@ -150,12 +132,11 @@ const Login = () => {
 
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center gap-3 mb-10">
-
               <img
-  src="/ozoco-logo.png"
-  alt="OZOCO"
-  className="h-10 w-auto object-contain"
-/>
+                src="/ozoco-logo.png"
+                alt="OZOCO"
+                className="h-10 w-auto object-contain"
+              />
 
               <div>
                 <h1 className="font-bold text-lg text-slate-900">
@@ -166,13 +147,11 @@ const Login = () => {
                   AI Citizen Service Platform
                 </p>
               </div>
-
             </div>
 
 
             {/* HEADING */}
             <div className="mb-8">
-
               <p className="text-sm font-semibold text-orange-600 mb-2">
                 WELCOME BACK
               </p>
@@ -184,7 +163,6 @@ const Login = () => {
               <p className="mt-3 text-slate-500">
                 Access your citizen services and track your requests.
               </p>
-
             </div>
 
 
@@ -193,7 +171,6 @@ const Login = () => {
 
               {/* EMAIL */}
               <div>
-
                 <label
                   htmlFor="email"
                   className="block text-sm font-medium text-slate-700 mb-2"
@@ -207,13 +184,11 @@ const Login = () => {
                   placeholder="Enter your email or mobile number"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
-
               </div>
 
 
               {/* PASSWORD */}
               <div>
-
                 <div className="flex items-center justify-between mb-2">
 
                   <label
@@ -238,13 +213,11 @@ const Login = () => {
                   placeholder="Enter your password"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
-
               </div>
 
 
               {/* REMEMBER */}
               <div className="flex items-center gap-2">
-
                 <input
                   id="remember"
                   type="checkbox"
@@ -257,7 +230,6 @@ const Login = () => {
                 >
                   Remember me
                 </label>
-
               </div>
 
 
@@ -274,9 +246,7 @@ const Login = () => {
 
             {/* REGISTER */}
             <div className="mt-8 text-center">
-
               <p className="text-sm text-slate-500">
-
                 Don't have an account?{" "}
 
                 <Link
@@ -285,27 +255,21 @@ const Login = () => {
                 >
                   Create an account
                 </Link>
-
               </p>
-
             </div>
 
 
             {/* SECURITY */}
             <div className="mt-8 pt-6 border-t border-slate-100">
-
               <p className="text-xs text-center text-slate-400">
                 🔒 Your account and submitted information are protected.
               </p>
-
             </div>
 
           </div>
-
         </div>
 
       </div>
-
     </div>
   );
 };
