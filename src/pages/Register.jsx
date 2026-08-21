@@ -3,62 +3,63 @@ import { Link } from "react-router-dom";
 const Register = () => {
   return (
     <div className="min-h-screen bg-[#FFF8F1] flex items-center justify-center p-4">
-
       <div className="w-full max-w-7xl min-h-[680px] bg-white rounded-[28px] shadow-xl overflow-hidden grid lg:grid-cols-2 border border-orange-100">
 
         {/* ================= LEFT SIDE ================= */}
-        <div className="relative overflow-hidden bg-[#FFF3E8] px-8 py-10 sm:px-12 lg:px-14 flex flex-col justify-between">
+        <div className="relative overflow-hidden px-8 py-10 sm:px-12 lg:px-14 flex flex-col justify-between">
 
-          {/* Decorative shapes */}
-          <div className="absolute -top-28 -right-28 w-80 h-80 rounded-full bg-orange-200/40" />
+          {/* Background Image */}
+          <img
+            src="/login-bg.jpg
+            "
+            alt="Citizen services"
+            className="absolute inset-0 w-full h-full object-cover blur-[4px] scale-105"
+          />
 
-          <div className="absolute bottom-[-100px] left-[-80px] w-72 h-72 rounded-full bg-orange-100" />
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-slate-950/60" />
 
+          {/* Orange Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-950/40 via-transparent to-slate-950/50" />
 
           {/* LOGO */}
           <div className="relative z-10">
-
             <img
               src="/ozoco-logo.png"
               alt="OZOCO"
               className="h-12 w-auto object-contain"
             />
 
-            <p className="text-xs text-slate-500 mt-1 ml-1">
+            <p className="text-xs text-slate-300 mt-1 ml-1">
               AI Citizen Service Platform
             </p>
-
           </div>
 
 
           {/* MAIN CONTENT */}
           <div className="relative z-10 max-w-xl mt-12 lg:mt-0">
 
-            <p className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-4">
+            <p className="text-sm font-semibold text-orange-300 uppercase tracking-wider mb-4">
               Join OZOCO
             </p>
 
-            <h2 className="text-4xl sm:text-5xl font-bold leading-[1.1] text-slate-900">
-
+            <h2 className="text-4xl sm:text-5xl font-bold leading-[1.1] text-white">
               One platform.
               <br />
 
-              <span className="text-orange-600">
+              <span className="text-orange-300">
                 Every civic request.
               </span>
 
               <br />
 
               One simpler experience.
-
             </h2>
 
-            <p className="mt-6 text-slate-600 text-base sm:text-lg leading-relaxed max-w-lg">
-
+            <p className="mt-6 text-slate-200 text-base sm:text-lg leading-relaxed max-w-lg">
               Create your account to submit civic problems, receive
               service guidance, and track your requests from submission
               to resolution.
-
             </p>
 
 
@@ -68,16 +69,16 @@ const Register = () => {
               {/* Feature 1 */}
               <div className="flex items-start gap-4">
 
-                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center shadow-sm text-lg">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center text-lg">
                   📝
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-white">
                     Report Your Problem
                   </h3>
 
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-slate-300 mt-1">
                     Submit details, photos, or documents related to your issue.
                   </p>
                 </div>
@@ -88,16 +89,16 @@ const Register = () => {
               {/* Feature 2 */}
               <div className="flex items-start gap-4">
 
-                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center shadow-sm text-lg">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center text-lg">
                   ✨
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-white">
                     Get the Right Service
                   </h3>
 
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-slate-300 mt-1">
                     AI helps understand your request and identify the appropriate service.
                   </p>
                 </div>
@@ -108,16 +109,16 @@ const Register = () => {
               {/* Feature 3 */}
               <div className="flex items-start gap-4">
 
-                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center shadow-sm text-lg">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center text-lg">
                   📍
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-white">
                     Smart Department Routing
                   </h3>
 
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-slate-300 mt-1">
                     Your request can be routed to the appropriate department and jurisdiction.
                   </p>
                 </div>
@@ -128,16 +129,16 @@ const Register = () => {
               {/* Feature 4 */}
               <div className="flex items-start gap-4">
 
-                <div className="w-10 h-10 shrink-0 rounded-full bg-white border border-orange-100 flex items-center justify-center shadow-sm text-lg">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center text-lg">
                   🔎
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-white">
                     Track Your Request
                   </h3>
 
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-slate-300 mt-1">
                     Stay informed about your request throughout the process.
                   </p>
                 </div>
@@ -145,12 +146,11 @@ const Register = () => {
               </div>
 
             </div>
-
           </div>
 
 
           {/* FOOTER */}
-          <div className="relative z-10 mt-10 flex items-center gap-6 text-xs text-slate-500">
+          <div className="relative z-10 mt-10 flex items-center gap-6 text-xs text-slate-300">
 
             <span>Secure</span>
 
@@ -319,10 +319,13 @@ const Register = () => {
                   className="text-sm text-slate-500 leading-relaxed"
                 >
                   I agree to the{" "}
+
                   <span className="font-medium text-orange-600">
                     Terms of Service
                   </span>{" "}
+
                   and{" "}
+
                   <span className="font-medium text-orange-600">
                     Privacy Policy
                   </span>
@@ -347,7 +350,6 @@ const Register = () => {
             <div className="mt-7 text-center">
 
               <p className="text-sm text-slate-500">
-
                 Already have an account?{" "}
 
                 <Link
@@ -356,7 +358,6 @@ const Register = () => {
                 >
                   Sign in
                 </Link>
-
               </p>
 
             </div>
@@ -372,11 +373,9 @@ const Register = () => {
             </div>
 
           </div>
-
         </div>
 
       </div>
-
     </div>
   );
 };
