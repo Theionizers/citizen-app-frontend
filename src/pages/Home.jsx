@@ -1,29 +1,26 @@
+import Navbar from "../components/Navbar";
+import Hero from "../components/Hero";
+
 const Home = () => {
   return (
     <div className="min-h-screen bg-[#FFF8F1]">
+      
+      <Navbar />
 
-      {/* Navbar */}
-      <nav>
-        Navbar
-      </nav>
-
-      {/* Hero */}
-      <section>
-        Hero Section
-      </section>
+      <Hero />
 
       {/* Services */}
-      <section>
+      <section id="services">
         Services
       </section>
 
       {/* How it works */}
-      <section>
+      <section id="how-it-works">
         How OZOCO Works
       </section>
 
       {/* Features */}
-      <section>
+      <section id="features">
         Features
       </section>
 
