@@ -1,6 +1,7 @@
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Services from "../components/Services";
+import HowItWorks from "../components/HowItWorks";
 
 const Home = () => {
   return (
@@ -11,6 +12,7 @@ const Home = () => {
       <Hero />
 
      <Services/>
+     <HowItWorks/>
 
       {/* How it works */}
       <section id="how-it-works">
