@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
+import Services from "../components/Services";
 
 const Home = () => {
   return (
@@ -9,10 +10,7 @@ const Home = () => {
 
       <Hero />
 
-      {/* Services */}
-      <section id="services">
-        Services
-      </section>
+     <Services/>
 
       {/* How it works */}
       <section id="how-it-works">
