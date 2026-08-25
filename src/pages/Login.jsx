@@ -279,12 +279,13 @@ onChange={(e) => setPassword(e.target.value)}
     {error}
   </p>
 )}
-              <button
-                type="submit"
-                className="w-full py-3.5 rounded-xl bg-orange-600 text-white font-semibold shadow-lg shadow-orange-600/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
-              >
-                Sign in →
-              </button>
+            <button
+  type="submit"
+  disabled={loading}
+  className="w-full py-3.5 rounded-xl bg-orange-600 text-white font-semibold shadow-lg shadow-orange-600/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+>
+  {loading ? "Signing in..." : "Sign in →"}
+</button>
 
             </form>
 
