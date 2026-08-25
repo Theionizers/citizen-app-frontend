@@ -1,6 +1,42 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { getCurrentUser, loginUser } from "../api/auth";
 
 const Login = () => {
+  const navigate = useNavigate();
+
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+const [error, setError] = useState("");
+const [loading, setLoading] = useState(false);
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  setError("");
+  setLoading(true);
+
+  try {
+    const data = await loginUser({
+      email,
+      password,
+    });
+
+    localStorage.setItem("access_token", data.access_token);
+
+    const user = await getCurrentUser(data.access_token);
+
+    localStorage.setItem("user", JSON.stringify(user));
+
+    navigate("/");
+  } catch (error) {
+    setError(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   return (
     <div className="min-h-screen bg-[#FFF8F1] flex items-center justify-center p-4">
       <div className="w-full max-w-7xl min-h-[680px] bg-white rounded-[28px] shadow-xl overflow-hidden grid lg:grid-cols-2 border border-orange-100">
@@ -167,7 +203,7 @@ const Login = () => {
 
 
             {/* FORM */}
-            <form className="space-y-5">
+           <form onSubmit={handleSubmit} className="space-y-5">
 
               {/* EMAIL */}
               <div>
@@ -175,15 +211,17 @@ const Login = () => {
                   htmlFor="email"
                   className="block text-sm font-medium text-slate-700 mb-2"
                 >
-                  Email or Mobile Number
+                  Email 
                 </label>
 
                 <input
-                  id="email"
-                  type="text"
-                  placeholder="Enter your email or mobile number"
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
-                />
+  id="email"
+  type="email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="Enter your email"
+  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+/> 
               </div>
 
 
@@ -210,6 +248,8 @@ const Login = () => {
                 <input
                   id="password"
                   type="password"
+                  value={password}
+onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
@@ -234,6 +274,11 @@ const Login = () => {
 
 
               {/* LOGIN */}
+              {error && (
+  <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+    {error}
+  </p>
+)}
               <button
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-orange-600 text-white font-semibold shadow-lg shadow-orange-600/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
