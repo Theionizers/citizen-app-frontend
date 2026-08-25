@@ -1,6 +1,45 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { registerUser } from "../api/auth";
 
 const Register = () => {
+   const navigate = useNavigate();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  setError("");
+
+  if (password !== confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    await registerUser({
+      name,
+      email,
+      password,
+    });
+
+    navigate("/login");
+  } catch (error) {
+    setError(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   return (
     <div className="min-h-screen bg-[#FFF8F1] flex items-center justify-center p-4">
       <div className="w-full max-w-7xl min-h-[680px] bg-white rounded-[28px] shadow-xl overflow-hidden grid lg:grid-cols-2 border border-orange-100">
@@ -203,7 +242,7 @@ const Register = () => {
 
 
             {/* FORM */}
-            <form className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
 
               {/* FULL NAME */}
               <div>
@@ -218,6 +257,8 @@ const Register = () => {
                 <input
                   id="name"
                   type="text"
+                  value={name}
+onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your full name"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
@@ -238,6 +279,8 @@ const Register = () => {
                 <input
                   id="email"
                   type="email"
+                  value={email}
+onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
@@ -245,24 +288,7 @@ const Register = () => {
               </div>
 
 
-              {/* MOBILE */}
-              <div>
-
-                <label
-                  htmlFor="mobile"
-                  className="block text-sm font-medium text-slate-700 mb-2"
-                >
-                  Mobile Number
-                </label>
-
-                <input
-                  id="mobile"
-                  type="tel"
-                  placeholder="Enter your mobile number"
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
-                />
-
-              </div>
+             
 
 
               {/* PASSWORD */}
@@ -278,6 +304,8 @@ const Register = () => {
                 <input
                   id="password"
                   type="password"
+                  value={password}
+onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a password"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
@@ -298,6 +326,8 @@ const Register = () => {
                 <input
                   id="confirmPassword"
                   type="password"
+                  value={confirmPassword}
+onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
@@ -336,11 +366,19 @@ const Register = () => {
 
 
               {/* REGISTER BUTTON */}
+
+              {error && (
+  <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+    {error}
+  </p>
+)}
+
               <button
                 type="submit"
+                disabled={loading}
                 className="w-full py-3.5 rounded-xl bg-orange-600 text-white font-semibold shadow-lg shadow-orange-600/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Create Account →
+             {loading ? "Creating Account..." : "Create Account →"}
               </button>
 
             </form>
