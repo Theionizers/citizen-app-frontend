@@ -5,6 +5,9 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const role = user?.role;
+
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user");
@@ -80,7 +83,14 @@ const Navbar = () => {
             >
               Get Started
             </Link>
+
+            {role && (
+              <span className="px-4 py-2 rounded-xl bg-orange-500/20 border border-orange-400/30 text-orange-200 text-sm font-semibold capitalize">
+                {role}
+              </span>
+            )}
             <button
+
               onClick={handleLogout}
               className="px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-semibold hover:bg-white/20 transition-all duration-200"
             >
@@ -158,6 +168,11 @@ const Navbar = () => {
               >
                 Get Started
               </Link>
+              {role && (
+                <span className="px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-400/20 text-orange-300 font-semibold capitalize">
+                  {role}
+                </span>
+              )}
               <button
                 onClick={handleLogout}
                 className="px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white font-semibold hover:bg-white/15 hover:border-orange-400/50 hover:text-orange-300 hover:-translate-y-0.5 transition-all duration-200"
