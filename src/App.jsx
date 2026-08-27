@@ -1,5 +1,5 @@
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import SubmitComplaint from "./pages/SubmitComplaint";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -12,6 +12,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        
 
         <Route
           path="/"
@@ -30,6 +31,10 @@ function App() {
           path="/forgot-password"
           element={<ForgotPassword />}
         />
+        <Route
+  path="/submit-complaint"
+  element={<SubmitComplaint />}
+/>
 
       </Routes>
     </BrowserRouter>
