@@ -1,3 +1,5 @@
+import Navbar from "../components/Navbar";
+
 const SubmitComplaint = () => {
   return (
     <div className="min-h-screen bg-[#FFF8F1]">
@@ -98,3 +100,19 @@ const SubmitComplaint = () => {
                 </div>
               </button>
             </div>
+             {/* Submit */}
+            <button
+              type="button"
+              className="w-full rounded-2xl bg-orange-600 px-6 py-3.5 text-white font-semibold shadow-lg shadow-orange-900/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
+            >
+              Submit Complaint
+            </button>
+
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default SubmitComplaint;
