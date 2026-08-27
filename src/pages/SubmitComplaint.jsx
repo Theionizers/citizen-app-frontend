@@ -44,3 +44,57 @@ const SubmitComplaint = () => {
                 Please provide enough details so we can understand your issue.
               </p>
             </div>
+               {/* Attachments */}
+            <div className="mb-7">
+              <label className="block text-sm font-semibold text-slate-800 mb-2">
+                Attach Image or Document
+                <span className="font-normal text-slate-400 ml-1">
+                  (Optional)
+                </span>
+              </label>
+
+              <label className="flex flex-col items-center justify-center min-h-36 rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/40 hover:bg-orange-50 hover:border-orange-300 transition cursor-pointer">
+                <span className="text-3xl mb-2">📎</span>
+
+                <span className="text-sm font-semibold text-slate-700">
+                  Upload an image or document
+                </span>
+
+                <span className="text-xs text-slate-500 mt-1">
+                  JPG, PNG, PDF and supported documents
+                </span>
+
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*,.pdf,.doc,.docx"
+                />
+              </label>
+            </div>
+
+            {/* Location */}
+            <div className="mb-8">
+              <label className="block text-sm font-semibold text-slate-800 mb-2">
+                Location
+                <span className="font-normal text-slate-400 ml-1">
+                  (Optional)
+                </span>
+              </label>
+
+              <button
+                type="button"
+                className="w-full flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left hover:border-orange-300 hover:bg-orange-50/40 transition"
+              >
+                <span className="text-xl">📍</span>
+
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Add your location
+                  </p>
+
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Helps us identify the appropriate jurisdiction
+                  </p>
+                </div>
+              </button>
+            </div>
