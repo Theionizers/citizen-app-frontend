@@ -74,41 +74,56 @@ const MyComplaints = () => {
             </div>
           </div>
 
-          {/* Summary */}
+          {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white rounded-2xl border border-orange-100 p-5 shadow-sm">
-              <p className="text-sm text-slate-500">Total Requests</p>
+
+            <div className="bg-[#FFFDF9] rounded-2xl border border-orange-200 p-5 shadow-md shadow-orange-900/5">
+              <p className="text-sm text-slate-500">
+                Total Requests
+              </p>
+
               <p className="mt-1 text-2xl font-bold text-slate-900">
                 3
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl border border-orange-100 p-5 shadow-sm">
-              <p className="text-sm text-slate-500">In Progress</p>
+            <div className="bg-[#FFFDF9] rounded-2xl border border-orange-200 p-5 shadow-md shadow-orange-900/5">
+              <p className="text-sm text-slate-500">
+                In Progress
+              </p>
+
               <p className="mt-1 text-2xl font-bold text-orange-600">
                 1
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl border border-orange-100 p-5 shadow-sm">
-              <p className="text-sm text-slate-500">Resolved</p>
+            <div className="bg-[#FFFDF9] rounded-2xl border border-orange-200 p-5 shadow-md shadow-orange-900/5">
+              <p className="text-sm text-slate-500">
+                Resolved
+              </p>
+
               <p className="mt-1 text-2xl font-bold text-green-600">
                 1
               </p>
             </div>
+
           </div>
 
           {/* Complaint List */}
           <div className="space-y-5">
+
             {complaints.map((complaint) => (
               <div
                 key={complaint.id}
-                className="bg-white rounded-3xl border border-orange-100 shadow-lg shadow-orange-900/5 p-6 sm:p-7 hover:shadow-xl transition-shadow duration-200"
+                className="bg-[#FFFDF9] rounded-3xl border border-orange-200 shadow-md shadow-orange-900/10 p-6 sm:p-7 hover:shadow-xl hover:border-orange-300 transition-all duration-200"
               >
-                {/* Top */}
+
+                {/* Complaint Header */}
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+
                   <div>
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+
                       <span className="text-xs font-semibold text-orange-600">
                         #{complaint.id}
                       </span>
@@ -120,6 +135,7 @@ const MyComplaints = () => {
                       >
                         {complaint.status}
                       </span>
+
                     </div>
 
                     <h2 className="text-lg sm:text-xl font-bold text-slate-900">
@@ -130,36 +146,43 @@ const MyComplaints = () => {
                   <p className="text-sm text-slate-500">
                     {complaint.date}
                   </p>
+
                 </div>
 
-                {/* Details */}
+                {/* Complaint Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                  <div className="rounded-2xl bg-slate-50 p-4">
+
+                  <div className="rounded-2xl bg-[#FFF8F1] border border-orange-100 p-4">
                     <p className="text-xs text-slate-500 mb-1">
                       Department
                     </p>
+
                     <p className="text-sm font-semibold text-slate-800">
                       {complaint.department}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="rounded-2xl bg-[#FFF8F1] border border-orange-100 p-4">
                     <p className="text-xs text-slate-500 mb-1">
                       Service
                     </p>
+
                     <p className="text-sm font-semibold text-slate-800">
                       {complaint.service}
                     </p>
                   </div>
+
                 </div>
 
                 {/* Progress */}
                 <div className="mt-6">
+
                   <p className="text-xs font-semibold text-slate-500 mb-3">
                     REQUEST PROGRESS
                   </p>
 
                   <div className="flex items-center">
+
                     <div className="w-3 h-3 rounded-full bg-orange-500 shrink-0" />
 
                     <div className="h-1 flex-1 bg-orange-200" />
@@ -187,6 +210,7 @@ const MyComplaints = () => {
                           : "bg-slate-300"
                       }`}
                     />
+
                   </div>
 
                   <div className="flex justify-between mt-2 text-[11px] text-slate-500">
@@ -194,19 +218,24 @@ const MyComplaints = () => {
                     <span>Processing</span>
                     <span>Resolved</span>
                   </div>
+
                 </div>
 
-                {/* Action */}
-                <div className="mt-6 pt-5 border-t border-slate-100 flex justify-end">
+                {/* View Details */}
+                <div className="mt-6 pt-5 border-t border-orange-100 flex justify-end">
+
                   <button
                     type="button"
-                    className="text-sm font-semibold text-orange-600 hover:text-orange-700 hover:translate-x-0.5 transition-all"
+                    className="text-sm font-semibold text-orange-600 hover:text-orange-700 hover:translate-x-0.5 transition-all duration-200"
                   >
                     View Details →
                   </button>
+
                 </div>
+
               </div>
             ))}
+
           </div>
 
         </div>
