@@ -1,4 +1,6 @@
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+
 
 const complaints = [
   {
@@ -40,6 +42,7 @@ const getStatusStyle = (status) => {
 };
 
 const MyComplaints = () => {
+    const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-[#FFF8F1]">
       <Navbar />
@@ -224,12 +227,13 @@ const MyComplaints = () => {
                 {/* View Details */}
                 <div className="mt-6 pt-5 border-t border-orange-100 flex justify-end">
 
-                  <button
-                    type="button"
-                    className="text-sm font-semibold text-orange-600 hover:text-orange-700 hover:translate-x-0.5 transition-all duration-200"
-                  >
-                    View Details →
-                  </button>
+                 <button
+  type="button"
+  onClick={() => navigate(`/complaint/${complaint.id}`)}
+  className="text-sm font-semibold text-orange-600 hover:text-orange-700 hover:translate-x-0.5 transition-all duration-200"
+>
+  View Details →
+</button>
 
                 </div>
 

@@ -1,6 +1,7 @@
 import ProtectedRoute from "./components/ProtectedRoute";
 import SubmitComplaint from "./pages/SubmitComplaint";
 import MyComplaints from "./pages/MyComplaints";
+import ComplaintDetails from "./pages/ComplaintDetails";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -40,6 +41,10 @@ function App() {
 <Route
   path="/my-complaints"
   element={<MyComplaints />}
+/>
+<Route
+  path="/complaint/:id"
+  element={<ComplaintDetails />}
 />
 
       </Routes>
