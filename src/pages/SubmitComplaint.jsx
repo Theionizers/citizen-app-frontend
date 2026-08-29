@@ -1,114 +1,326 @@
+import { useState } from "react";
 import Navbar from "../components/Navbar";
 
 const SubmitComplaint = () => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [locationAdded, setLocationAdded] = useState(false);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+  };
+
   return (
     <div className="min-h-screen bg-[#FFF8F1]">
       <Navbar />
 
       <main className="pt-32 pb-16 px-5 sm:px-8 lg:px-10">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
 
-     {/* Page Header */}
+          {/* Page Header */}
           <div className="mb-10">
-            <p className="text-sm font-semibold text-orange-600 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
               CITIZEN SERVICES
-            </p>
+            </div>
 
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900">
               Submit Your Complaint
             </h1>
 
-            <p className="mt-3 text-slate-600 max-w-2xl">
-              Tell us about the problem you're facing. We'll help identify
-              the right service and department for your request.
+            <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl leading-7">
+              Tell us about the problem you're facing. Provide the details
+              below and we'll help route your request to the right department.
             </p>
           </div>
-  {/* Complaint Form */}
-          <div className="bg-white rounded-3xl border border-orange-100 shadow-xl shadow-orange-900/5 p-6 sm:p-8">
 
-            {/* Description */}
-            <div className="mb-7">
-              <label
-                htmlFor="description"
-                className="block text-sm font-semibold text-slate-800 mb-2"
-              >
-                Describe your problem
-              </label>
+          {/* Main Form Card */}
+          <div className="bg-[#FFFDF9] rounded-3xl border border-orange-200 shadow-xl shadow-orange-900/10 overflow-hidden">
 
-              <textarea
-                id="description"
-                rows="7"
-                placeholder="Explain your problem in your own words..."
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-slate-800 placeholder:text-slate-400 outline-none resize-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100 transition"
-              />
-
-              <p className="mt-2 text-xs text-slate-500">
-                Please provide enough details so we can understand your issue.
-              </p>
-            </div>
-               {/* Attachments */}
-            <div className="mb-7">
-              <label className="block text-sm font-semibold text-slate-800 mb-2">
-                Attach Image or Document
-                <span className="font-normal text-slate-400 ml-1">
-                  (Optional)
-                </span>
-              </label>
-
-              <label className="flex flex-col items-center justify-center min-h-36 rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/40 hover:bg-orange-50 hover:border-orange-300 transition cursor-pointer">
-                <span className="text-3xl mb-2">📎</span>
-
-                <span className="text-sm font-semibold text-slate-700">
-                  Upload an image or document
-                </span>
-
-                <span className="text-xs text-slate-500 mt-1">
-                  JPG, PNG, PDF and supported documents
-                </span>
-
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*,.pdf,.doc,.docx"
-                />
-              </label>
-            </div>
-
-            {/* Location */}
-            <div className="mb-8">
-              <label className="block text-sm font-semibold text-slate-800 mb-2">
-                Location
-                <span className="font-normal text-slate-400 ml-1">
-                  (Optional)
-                </span>
-              </label>
-
-              <button
-                type="button"
-                className="w-full flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left hover:border-orange-300 hover:bg-orange-50/40 transition"
-              >
-                <span className="text-xl">📍</span>
+            {/* Card Header */}
+            <div className="px-6 sm:px-8 py-6 border-b border-orange-100 bg-gradient-to-r from-orange-50/70 to-transparent">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-orange-900/20">
+                  <span className="text-lg">✦</span>
+                </div>
 
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">
-                    Add your location
-                  </p>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Tell us what happened
+                  </h2>
 
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Helps us identify the appropriate jurisdiction
+                  <p className="text-sm text-slate-500 mt-1">
+                    You can describe your issue by typing or using your voice.
                   </p>
                 </div>
-              </button>
+              </div>
             </div>
-             {/* Submit */}
-            <button
-              type="button"
-              className="w-full rounded-2xl bg-orange-600 px-6 py-3.5 text-white font-semibold shadow-lg shadow-orange-900/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
-            >
-              Submit Complaint
-            </button>
 
+            <div className="p-6 sm:p-8">
+
+              {/* Description */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <label
+                    htmlFor="description"
+                    className="text-sm font-semibold text-slate-800"
+                  >
+                    Describe your problem
+                  </label>
+
+                  <span className="text-xs text-slate-400">
+                    Required
+                  </span>
+                </div>
+
+                <textarea
+                  id="description"
+                  rows="7"
+                  placeholder="Explain your problem in your own words..."
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 outline-none resize-none focus:bg-white focus:border-orange-400 focus:ring-4 focus:ring-orange-100 transition-all duration-200"
+                />
+
+                <div className="flex justify-between mt-2">
+                  <p className="text-xs text-slate-500">
+                    Please provide enough details so we can understand your
+                    issue.
+                  </p>
+
+                  <span className="text-xs text-slate-400">
+                    0 / 1000
+                  </span>
+                </div>
+              </div>
+
+              {/* Voice Input */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-slate-800">
+                    Describe with Voice
+                  </label>
+
+                  <span className="text-xs text-slate-400">
+                    Optional
+                  </span>
+                </div>
+
+                <div
+                  className={`rounded-2xl border p-5 transition-all duration-200 ${
+                    isRecording
+                      ? "border-orange-400 bg-orange-50"
+                      : "border-orange-200 bg-orange-50/40"
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition ${
+                          isRecording
+                            ? "bg-orange-600 text-white shadow-md shadow-orange-900/20"
+                            : "bg-white text-orange-600 border border-orange-100"
+                        }`}
+                      >
+                        <span className="text-xl">🎤</span>
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">
+                          {isRecording
+                            ? "Listening..."
+                            : "Tell us your problem"}
+                        </p>
+
+                        <p className="text-xs text-slate-500 mt-1">
+                          {isRecording
+                            ? "Speak clearly and tap stop when finished."
+                            : "Use your voice instead of typing your complaint."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsRecording(!isRecording)}
+                      className={`w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                        isRecording
+                          ? "bg-slate-800 text-white hover:bg-slate-900"
+                          : "bg-orange-600 text-white hover:bg-orange-700 hover:-translate-y-0.5 shadow-md shadow-orange-900/20"
+                      }`}
+                    >
+                      {isRecording ? "Stop Recording" : "Start Recording"}
+                    </button>
+                  </div>
+
+                  {isRecording && (
+                    <div className="flex items-center gap-1 mt-5 pt-4 border-t border-orange-200">
+                      <span className="w-1 h-3 bg-orange-400 rounded-full animate-pulse" />
+                      <span className="w-1 h-5 bg-orange-500 rounded-full animate-pulse" />
+                      <span className="w-1 h-8 bg-orange-600 rounded-full animate-pulse" />
+                      <span className="w-1 h-5 bg-orange-500 rounded-full animate-pulse" />
+                      <span className="w-1 h-3 bg-orange-400 rounded-full animate-pulse" />
+
+                      <span className="text-xs font-medium text-orange-700 ml-2">
+                        Recording in progress
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Attachment */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-slate-800">
+                    Attach Image or Document
+                  </label>
+
+                  <span className="text-xs text-slate-400">
+                    Optional
+                  </span>
+                </div>
+
+                {!selectedFile ? (
+                  <label className="group flex flex-col items-center justify-center min-h-40 rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/30 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 cursor-pointer">
+
+                    <div className="w-12 h-12 rounded-xl bg-white border border-orange-100 flex items-center justify-center text-orange-600 mb-3 group-hover:scale-105 transition-transform">
+                      <span className="text-xl">📎</span>
+                    </div>
+
+                    <p className="text-sm font-semibold text-slate-700">
+                      Click to upload a file
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+                      JPG, PNG, PDF, DOC or DOCX
+                    </p>
+
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                ) : (
+                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50/50 p-4">
+
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-xl bg-white border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                        📄
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">
+                          {selectedFile.name}
+                        </p>
+
+                        <p className="text-xs text-slate-500 mt-1">
+                          {(selectedFile.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={removeFile}
+                      className="text-sm font-semibold text-red-500 hover:text-red-600 shrink-0"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Location */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-slate-800">
+                    Location
+                  </label>
+
+                  <span className="text-xs text-slate-400">
+                    Optional
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setLocationAdded(!locationAdded)}
+                  className={`w-full flex items-center justify-between gap-4 rounded-2xl border p-4 text-left transition-all duration-200 ${
+                    locationAdded
+                      ? "border-orange-400 bg-orange-50"
+                      : "border-slate-200 bg-slate-50 hover:border-orange-300 hover:bg-orange-50/40"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-white border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                      📍
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {locationAdded
+                          ? "Location added"
+                          : "Add your location"}
+                      </p>
+
+                      <p className="text-xs text-slate-500 mt-1">
+                        {locationAdded
+                          ? "Your location will be included with this request."
+                          : "Helps us identify the appropriate jurisdiction."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-sm font-semibold text-orange-600 shrink-0">
+                    {locationAdded ? "Added ✓" : "Add"}
+                  </span>
+                </button>
+              </div>
+
+              {/* Submit Area */}
+              <div className="pt-6 border-t border-orange-100">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">
+                      Ready to submit?
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+                      Your request will be reviewed and routed to the
+                      appropriate department.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-orange-600 text-white text-sm font-semibold shadow-lg shadow-orange-900/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    Submit Complaint →
+                  </button>
+
+                </div>
+              </div>
+
+            </div>
           </div>
+
+          {/* Trust Note */}
+          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-500">
+            <span className="text-green-600">✓</span>
+            Your complaint details will be handled securely.
+          </div>
+
         </div>
       </main>
     </div>
