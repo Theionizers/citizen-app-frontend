@@ -1,10 +1,21 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
 const SubmitComplaint = () => {
+  const navigate = useNavigate();
+
+  const [description, setDescription] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [locationAdded, setLocationAdded] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -16,6 +27,67 @@ const SubmitComplaint = () => {
 
   const removeFile = () => {
     setSelectedFile(null);
+  };
+
+  const handleSubmit = async () => {
+    const trimmedDescription = description.trim();
+
+    if (!trimmedDescription) {
+      setError("Please describe your problem before submitting.");
+      return;
+    }
+
+    if (trimmedDescription.length > 1000) {
+      setError("Complaint description cannot exceed 1000 characters.");
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError("");
+      setSuccess("");
+
+      const response = await fetch(`${API_BASE_URL}/complaints`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          description: trimmedDescription,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail || "Failed to submit complaint."
+        );
+      }
+
+      setSuccess("Your complaint has been submitted successfully.");
+
+      // Give the user a moment to see success message
+      setTimeout(() => {
+        navigate("/my-complaints");
+      }, 1000);
+    } catch (err) {
+      console.error("Complaint submission error:", err);
+
+      setError(
+        err.message || "Something went wrong while submitting your complaint."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,6 +156,12 @@ const SubmitComplaint = () => {
                 <textarea
                   id="description"
                   rows="7"
+                  maxLength={1000}
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    setError("");
+                  }}
                   placeholder="Explain your problem in your own words..."
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 outline-none resize-none focus:bg-white focus:border-orange-400 focus:ring-4 focus:ring-orange-100 transition-all duration-200"
                 />
@@ -95,7 +173,7 @@ const SubmitComplaint = () => {
                   </p>
 
                   <span className="text-xs text-slate-400">
-                    0 / 1000
+                    {description.length} / 1000
                   </span>
                 </div>
               </div>
@@ -113,21 +191,19 @@ const SubmitComplaint = () => {
                 </div>
 
                 <div
-                  className={`rounded-2xl border p-5 transition-all duration-200 ${
-                    isRecording
+                  className={`rounded-2xl border p-5 transition-all duration-200 ${isRecording
                       ? "border-orange-400 bg-orange-50"
                       : "border-orange-200 bg-orange-50/40"
-                  }`}
+                    }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 
                     <div className="flex items-center gap-4">
                       <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition ${
-                          isRecording
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition ${isRecording
                             ? "bg-orange-600 text-white shadow-md shadow-orange-900/20"
                             : "bg-white text-orange-600 border border-orange-100"
-                        }`}
+                          }`}
                       >
                         <span className="text-xl">🎤</span>
                       </div>
@@ -142,7 +218,7 @@ const SubmitComplaint = () => {
                         <p className="text-xs text-slate-500 mt-1">
                           {isRecording
                             ? "Speak clearly and tap stop when finished."
-                            : "Use your voice instead of typing your complaint."}
+                            : "Voice submission will be connected when the backend voice API is available."}
                         </p>
                       </div>
                     </div>
@@ -150,13 +226,14 @@ const SubmitComplaint = () => {
                     <button
                       type="button"
                       onClick={() => setIsRecording(!isRecording)}
-                      className={`w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        isRecording
+                      className={`w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${isRecording
                           ? "bg-slate-800 text-white hover:bg-slate-900"
                           : "bg-orange-600 text-white hover:bg-orange-700 hover:-translate-y-0.5 shadow-md shadow-orange-900/20"
-                      }`}
+                        }`}
                     >
-                      {isRecording ? "Stop Recording" : "Start Recording"}
+                      {isRecording
+                        ? "Stop Recording"
+                        : "Start Recording"}
                     </button>
                   </div>
 
@@ -238,6 +315,11 @@ const SubmitComplaint = () => {
                     </button>
                   </div>
                 )}
+
+                <p className="mt-2 text-xs text-slate-400">
+                  File upload will be connected when the backend provides a
+                  complaint attachment endpoint.
+                </p>
               </div>
 
               {/* Location */}
@@ -255,11 +337,10 @@ const SubmitComplaint = () => {
                 <button
                   type="button"
                   onClick={() => setLocationAdded(!locationAdded)}
-                  className={`w-full flex items-center justify-between gap-4 rounded-2xl border p-4 text-left transition-all duration-200 ${
-                    locationAdded
+                  className={`w-full flex items-center justify-between gap-4 rounded-2xl border p-4 text-left transition-all duration-200 ${locationAdded
                       ? "border-orange-400 bg-orange-50"
                       : "border-slate-200 bg-slate-50 hover:border-orange-300 hover:bg-orange-50/40"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-xl bg-white border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
@@ -275,7 +356,7 @@ const SubmitComplaint = () => {
 
                       <p className="text-xs text-slate-500 mt-1">
                         {locationAdded
-                          ? "Your location will be included with this request."
+                          ? "Location UI selected. Backend location API is not connected yet."
                           : "Helps us identify the appropriate jurisdiction."}
                       </p>
                     </div>
@@ -286,6 +367,24 @@ const SubmitComplaint = () => {
                   </span>
                 </button>
               </div>
+
+              {/* Error */}
+              {error && (
+                <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+                  <p className="text-sm font-medium text-red-700">
+                    {error}
+                  </p>
+                </div>
+              )}
+
+              {/* Success */}
+              {success && (
+                <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+                  <p className="text-sm font-medium text-green-700">
+                    {success}
+                  </p>
+                </div>
+              )}
 
               {/* Submit Area */}
               <div className="pt-6 border-t border-orange-100">
@@ -304,9 +403,16 @@ const SubmitComplaint = () => {
 
                   <button
                     type="button"
-                    className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-orange-600 text-white text-sm font-semibold shadow-lg shadow-orange-900/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className={`w-full sm:w-auto px-7 py-3.5 rounded-xl text-white text-sm font-semibold shadow-lg transition-all duration-200 ${isSubmitting
+                        ? "bg-orange-400 cursor-not-allowed"
+                        : "bg-orange-600 hover:bg-orange-700 hover:-translate-y-0.5 shadow-orange-900/20"
+                      }`}
                   >
-                    Submit Complaint →
+                    {isSubmitting
+                      ? "Submitting..."
+                      : "Submit Complaint →"}
                   </button>
 
                 </div>
