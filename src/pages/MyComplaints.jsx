@@ -386,7 +386,9 @@ const MyComplaints = () => {
                       <button
                         type="button"
                         onClick={() =>
-                          navigate(`/complaint/${complaint.id}`)
+                         navigate(`/complaint/${complaint.id}`, {
+  state: { complaint },
+})
                         }
                         className="text-sm font-semibold text-orange-600 hover:text-orange-700 hover:translate-x-0.5 transition-all duration-200"
                       >
