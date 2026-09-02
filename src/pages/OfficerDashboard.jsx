@@ -3,364 +3,555 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { officerApi } from "../api/officer";
 
-const formatStatus = (status) => {
-  if (!status) return "Submitted";
+const normalizeStatus = (status = "") =>
+  status.toLowerCase().replaceAll("_", " ").trim();
 
-  return status
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-};
+const formatStatus = (status = "") =>
+  normalizeStatus(status).replace(/\b\w/g, (char) => char.toUpperCase());
 
 const formatDate = (date) => {
-  if (!date) return "—";
+  if (!date) return "-";
 
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return date;
-  }
-
-  return parsedDate.toLocaleDateString("en-IN", {
+  return new Date(date).toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 };
 
-const getStatusClass = (status) => {
-  const normalized = status?.toLowerCase();
-
-  if (normalized === "resolved" || normalized === "closed") {
-    return "bg-green-50 text-green-700 border-green-200";
-  }
-
-  if (
-    normalized === "in progress" ||
-    normalized === "processing" ||
-    normalized === "under_review"
-  ) {
-    return "bg-orange-50 text-orange-700 border-orange-200";
-  }
-
-  return "bg-blue-50 text-blue-700 border-blue-200";
+const statusStyles = {
+  assigned: "bg-blue-50 text-blue-600 border-blue-100",
+  submitted: "bg-slate-50 text-slate-600 border-slate-200",
+  "in progress": "bg-orange-50 text-orange-600 border-orange-100",
+  "pending citizen": "bg-yellow-50 text-yellow-600 border-yellow-100",
+  resolved: "bg-green-50 text-green-600 border-green-100",
+  closed: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
-const OfficerDashboard = () => {
+function StatCard({ title, value, subtitle, icon, iconClass }) {
+  return (
+    <div className="group rounded-2xl border border-orange-100 bg-white p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm font-medium text-slate-500">{title}</p>
+
+          <p className="mt-2 text-3xl font-bold text-slate-900">
+            {value}
+          </p>
+
+          <p className="mt-1 text-xs text-slate-400">{subtitle}</p>
+        </div>
+
+        <div
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconClass}`}
+        >
+          <span className="text-lg">{icon}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function OfficerDashboard() {
   const navigate = useNavigate();
 
   const [complaints, setComplaints] = useState([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const loadComplaints = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await officerApi.getAssignedComplaints();
+
+      setComplaints(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Failed to load complaints.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadComplaints = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const data = await officerApi.getComplaints();
-
-        setComplaints(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Failed to load officer complaints:", err);
-        setError(err.message || "Unable to load complaints.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadComplaints();
   }, []);
 
+  /*
+    Stats are calculated from real backend complaints.
+  */
   const stats = useMemo(() => {
-    const total = complaints.length;
-
-    const submitted = complaints.filter(
-      (complaint) =>
-        complaint.status?.toLowerCase() === "submitted"
-    ).length;
-
-    const inProgress = complaints.filter((complaint) => {
-      const status = complaint.status?.toLowerCase();
-
-      return (
-        status === "in progress" ||
-        status === "processing" ||
-        status === "under_review"
-      );
-    }).length;
-
-    const resolved = complaints.filter((complaint) => {
-      const status = complaint.status?.toLowerCase();
-
-      return status === "resolved" || status === "closed";
-    }).length;
-
     return {
-      total,
-      submitted,
-      inProgress,
-      resolved,
+      total: complaints.length,
+
+      assigned: complaints.filter(
+        (complaint) =>
+          normalizeStatus(complaint.status) === "assigned"
+      ).length,
+
+      inProgress: complaints.filter(
+        (complaint) =>
+          normalizeStatus(complaint.status) === "in progress"
+      ).length,
+
+      resolved: complaints.filter(
+        (complaint) =>
+          normalizeStatus(complaint.status) === "resolved"
+      ).length,
     };
   }, [complaints]);
 
+  /*
+    Search + status filtering.
+  */
   const filteredComplaints = useMemo(() => {
+    const query = search.toLowerCase().trim();
+
     return complaints.filter((complaint) => {
-      const searchText = search.toLowerCase().trim();
+      const description =
+        complaint.description?.toLowerCase() || "";
+
+      const complaintId = String(complaint.id || "");
 
       const matchesSearch =
-        !searchText ||
-        String(complaint.id).includes(searchText) ||
-        complaint.description?.toLowerCase().includes(searchText);
+        !query ||
+        complaintId.includes(query) ||
+        description.includes(query);
+
+      const complaintStatus = normalizeStatus(complaint.status);
 
       const matchesStatus =
         statusFilter === "all" ||
-        complaint.status?.toLowerCase() === statusFilter;
+        complaintStatus === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
   }, [complaints, search, statusFilter]);
 
+  const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+  };
+
   return (
-    <div className="min-h-screen bg-[#FFF8F1]">
+    <div className="min-h-screen bg-[#FFF8F1] text-slate-900">
       <Navbar />
 
-      <main className="pt-32 pb-16 px-5 sm:px-8 lg:px-10">
-        <div className="max-w-7xl mx-auto">
+      <main className="mx-auto max-w-[1500px] px-5 py-8 lg:px-8">
+        <div className="grid gap-7 lg:grid-cols-[230px_1fr]">
 
-          {/* Header */}
-          <div className="mb-8">
-            <p className="text-sm font-semibold text-orange-600 uppercase tracking-wide">
-              Officer Portal
-            </p>
+          {/* ================= SIDEBAR ================= */}
+          <aside className="hidden rounded-2xl border border-orange-100 bg-white p-4 shadow-[0_6px_24px_rgba(90,60,30,0.04)] lg:block">
+            <nav className="space-y-1">
 
-            <h1 className="mt-2 text-3xl sm:text-4xl font-bold text-slate-900">
-              Officer Dashboard
-            </h1>
+              <button
+                onClick={() => handleStatusFilter("all")}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                  statusFilter === "all"
+                    ? "bg-orange-50 text-orange-600"
+                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}
+              >
+                <span>▦</span>
+                Dashboard
+              </button>
 
-            <p className="mt-2 text-slate-600">
-              Review and manage complaints assigned to you.
-            </p>
-          </div>
+              <button
+                onClick={() => handleStatusFilter("assigned")}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
+                  statusFilter === "assigned"
+                    ? "bg-orange-50 font-semibold text-orange-600"
+                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}
+              >
+                <span>□</span>
+                My Cases
+              </button>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-
-            <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-5">
-              <p className="text-sm text-slate-500">
-                Total Cases
-              </p>
-
-              <p className="mt-2 text-3xl font-bold text-slate-900">
-                {stats.total}
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-5">
-              <p className="text-sm text-slate-500">
-                Submitted
-              </p>
-
-              <p className="mt-2 text-3xl font-bold text-blue-600">
-                {stats.submitted}
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-5">
-              <p className="text-sm text-slate-500">
+              <button
+                onClick={() => handleStatusFilter("in progress")}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
+                  statusFilter === "in progress"
+                    ? "bg-orange-50 font-semibold text-orange-600"
+                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}
+              >
+                <span>◷</span>
                 In Progress
-              </p>
+              </button>
 
-              <p className="mt-2 text-3xl font-bold text-orange-600">
-                {stats.inProgress}
-              </p>
-            </div>
+              <button
+                onClick={() => handleStatusFilter("pending citizen")}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
+                  statusFilter === "pending citizen"
+                    ? "bg-orange-50 font-semibold text-orange-600"
+                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}
+              >
+                <span>⌛</span>
+                Pending Citizen
+              </button>
 
-            <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-5">
-              <p className="text-sm text-slate-500">
+              <button
+                onClick={() => handleStatusFilter("resolved")}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
+                  statusFilter === "resolved"
+                    ? "bg-orange-50 font-semibold text-orange-600"
+                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}
+              >
+                <span>✓</span>
                 Resolved
+              </button>
+
+              <button
+                onClick={() => handleStatusFilter("closed")}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
+                  statusFilter === "closed"
+                    ? "bg-orange-50 font-semibold text-orange-600"
+                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}
+              >
+                <span>□</span>
+                Closed
+              </button>
+
+            </nav>
+
+            <div className="my-5 border-t border-orange-100" />
+
+            <div className="rounded-xl bg-[#FFF8F1] p-4">
+              <p className="text-sm font-semibold text-slate-800">
+                Officer Portal
               </p>
 
-              <p className="mt-2 text-3xl font-bold text-green-600">
-                {stats.resolved}
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                Manage complaints assigned to your officer account.
+              </p>
+            </div>
+          </aside>
+
+          {/* ================= MAIN ================= */}
+          <section>
+
+            {/* PAGE HEADER */}
+            <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-orange-600">
+                  Officer Portal
+                </p>
+
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+                  Officer Dashboard
+                </h1>
+
+                <p className="mt-2 text-slate-500">
+                  Review and manage complaints assigned to you.
+                </p>
+              </div>
+
+              <button
+                onClick={loadComplaints}
+                disabled={loading}
+                className="rounded-xl border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                ↻ {loading ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
+
+            {/* ================= WELCOME ================= */}
+            <div className="mb-7 rounded-2xl border border-orange-100 bg-white px-6 py-7 shadow-[0_6px_24px_rgba(90,60,30,0.04)]">
+              <p className="text-sm font-semibold text-orange-600">
+                Welcome back
+              </p>
+
+              <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                Manage your assigned cases
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                Keep track of citizen complaints and their current status
+                from one place.
               </p>
             </div>
 
-          </div>
+            {/* ================= STATS ================= */}
+            <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-          {/* Complaints section */}
-          <div className="bg-[#FFFDF9] rounded-3xl border border-orange-200 shadow-md shadow-orange-900/10 overflow-hidden">
+              <StatCard
+                title="Total Cases"
+                value={stats.total}
+                subtitle="All assigned cases"
+                icon="▣"
+                iconClass="bg-orange-50 text-orange-600"
+              />
 
-            <div className="p-6 border-b border-orange-100">
+              <StatCard
+                title="Assigned"
+                value={stats.assigned}
+                subtitle="Waiting for action"
+                icon="◷"
+                iconClass="bg-blue-50 text-blue-600"
+              />
 
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <StatCard
+                title="In Progress"
+                value={stats.inProgress}
+                subtitle="Currently being handled"
+                icon="↻"
+                iconClass="bg-amber-50 text-amber-600"
+              />
 
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">
-                    Complaints
-                  </h2>
+              <StatCard
+                title="Resolved"
+                value={stats.resolved}
+                subtitle="Successfully resolved"
+                icon="✓"
+                iconClass="bg-green-50 text-green-600"
+              />
 
-                  <p className="mt-1 text-sm text-slate-500">
-                    View complaints available to your officer account.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search complaint..."
-                    className="w-full sm:w-64 px-4 py-2.5 rounded-xl border border-orange-100 bg-white text-sm outline-none focus:ring-2 focus:ring-orange-200"
-                  />
-
-                  <select
-                    value={statusFilter}
-                    onChange={(event) =>
-                      setStatusFilter(event.target.value)
-                    }
-                    className="px-4 py-2.5 rounded-xl border border-orange-100 bg-white text-sm outline-none focus:ring-2 focus:ring-orange-200"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="submitted">Submitted</option>
-                    <option value="in progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
-                  </select>
-
-                </div>
-
-              </div>
             </div>
 
-            {/* Loading */}
-            {loading && (
-              <div className="p-12 text-center">
-                <p className="text-sm text-slate-500">
-                  Loading complaints...
-                </p>
-              </div>
-            )}
+            {/* ================= COMPLAINTS ================= */}
+            <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-[0_6px_24px_rgba(90,60,30,0.04)]">
 
-            {/* Error */}
-            {!loading && error && (
-              <div className="p-12 text-center">
-                <h3 className="text-lg font-bold text-slate-900">
-                  Unable to load complaints
-                </h3>
+              {/* SECTION HEADER */}
+              <div className="border-b border-orange-100 p-6">
+                <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
 
-                <p className="mt-2 text-sm text-red-500">
-                  {error}
-                </p>
-              </div>
-            )}
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">
+                      Assigned Complaints
+                    </h2>
 
-            {/* Empty */}
-            {!loading && !error && filteredComplaints.length === 0 && (
-              <div className="p-12 text-center">
+                    <p className="mt-1 text-sm text-slate-500">
+                      View complaints currently assigned to you.
+                    </p>
+                  </div>
 
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-50 flex items-center justify-center text-2xl">
-                  📋
-                </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
 
-                <h3 className="mt-4 text-lg font-bold text-slate-900">
-                  No complaints found
-                </h3>
+                    {/* SEARCH */}
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                        ⌕
+                      </span>
 
-                <p className="mt-2 text-sm text-slate-500">
-                  No complaints are currently assigned to this officer.
-                </p>
-
-              </div>
-            )}
-
-            {/* Complaint list */}
-            {!loading && !error && filteredComplaints.length > 0 && (
-              <div className="divide-y divide-orange-100">
-
-                {filteredComplaints.map((complaint) => (
-                  <div
-                    key={complaint.id}
-                    className="p-6 hover:bg-[#FFF8F1] transition"
-                  >
-
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
-
-                      <div className="min-w-0">
-
-                        <div className="flex flex-wrap items-center gap-3 mb-3">
-
-                          <span className="text-sm font-bold text-orange-600">
-                            OZO-{complaint.id}
-                          </span>
-
-                          <span
-                            className={`px-3 py-1 rounded-full border text-xs font-semibold ${getStatusClass(
-                              complaint.status
-                            )}`}
-                          >
-                            {formatStatus(complaint.status)}
-                          </span>
-
-                        </div>
-
-                        <p className="text-base font-semibold text-slate-900 leading-6">
-                          {complaint.description ||
-                            "No complaint description available."}
-                        </p>
-
-                        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-xs text-slate-500">
-
-                          <span>
-                            Department:{" "}
-                            {complaint.department_id
-                              ? `#${complaint.department_id}`
-                              : "Not assigned"}
-                          </span>
-
-                          <span>
-                            Service:{" "}
-                            {complaint.service_id
-                              ? `#${complaint.service_id}`
-                              : "Not assigned"}
-                          </span>
-
-                          <span>
-                            Created: {formatDate(complaint.created_at)}
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigate(`/complaint/${complaint.id}`)
-                        }
-                        className="shrink-0 px-5 py-2.5 rounded-xl bg-orange-600 text-white text-sm font-semibold hover:bg-orange-700 transition"
-                      >
-                        View Details
-                      </button>
-
+                      <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search complaint..."
+                        className="w-full rounded-xl border border-orange-100 bg-white py-3 pl-10 pr-4 text-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-orange-300 focus:ring-2 focus:ring-orange-100 sm:w-64"
+                      />
                     </div>
 
+                    {/* STATUS */}
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="rounded-xl border border-orange-100 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="assigned">Assigned</option>
+                      <option value="submitted">Submitted</option>
+                      <option value="in progress">
+                        In Progress
+                      </option>
+                      <option value="pending citizen">
+                        Pending Citizen
+                      </option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+
                   </div>
-                ))}
-
+                </div>
               </div>
-            )}
 
-          </div>
+              {/* ERROR */}
+              {error && (
+                <div className="m-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
 
+              {/* LOADING */}
+              {loading && (
+                <div className="space-y-4 p-6">
+                  {[1, 2].map((item) => (
+                    <div
+                      key={item}
+                      className="animate-pulse rounded-xl border border-orange-100 p-6"
+                    >
+                      <div className="h-5 w-24 rounded bg-slate-100" />
+                      <div className="mt-4 h-5 w-2/3 rounded bg-slate-100" />
+                      <div className="mt-4 h-4 w-1/2 rounded bg-slate-100" />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* EMPTY */}
+              {!loading && filteredComplaints.length === 0 && (
+                <div className="px-6 py-16 text-center">
+
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-orange-50 text-xl text-orange-600">
+                    ▣
+                  </div>
+
+                  <h3 className="mt-5 text-lg font-bold text-slate-900">
+                    No complaints found
+                  </h3>
+
+                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+                    {complaints.length === 0
+                      ? "There are currently no complaints assigned to your officer account."
+                      : "No complaint matches your current search or status filter."}
+                  </p>
+
+                </div>
+              )}
+
+              {/* COMPLAINT LIST */}
+              {!loading && filteredComplaints.length > 0 && (
+                <div className="space-y-4 p-5 md:p-6">
+
+                  {filteredComplaints.map((complaint) => {
+                    const status = normalizeStatus(complaint.status);
+
+                    const statusClass =
+                      statusStyles[status] ||
+                      "border-slate-200 bg-slate-50 text-slate-600";
+
+                    return (
+                      <article
+                        key={complaint.id}
+                        className="group relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-5 transition-all duration-200 hover:border-orange-200 hover:shadow-[0_8px_26px_rgba(90,60,30,0.07)] md:p-6"
+                      >
+                        {/* LEFT ACCENT */}
+                        <div className="absolute left-0 top-0 h-full w-1 bg-orange-500" />
+
+                        <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr_auto] xl:items-center">
+
+                          {/* COMPLAINT INFO */}
+                          <div>
+                            <div className="flex flex-wrap items-center gap-3">
+
+                              <span className="text-sm font-bold text-orange-600">
+                                OZO-{complaint.id}
+                              </span>
+
+                              <span
+                                className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusClass}`}
+                              >
+                                {formatStatus(complaint.status)}
+                              </span>
+
+                            </div>
+
+                            <h3 className="mt-4 text-lg font-bold leading-7 text-slate-900">
+                              {complaint.description || "-"}
+                            </h3>
+
+                            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+
+                              <div>
+                                <p className="text-xs font-medium text-slate-400">
+                                  Department
+                                </p>
+
+                                <p className="mt-1 text-sm font-semibold text-slate-700">
+                                  #{complaint.department_id ?? "-"}
+                                </p>
+                              </div>
+
+                              <div>
+                                <p className="text-xs font-medium text-slate-400">
+                                  Service
+                                </p>
+
+                                <p className="mt-1 text-sm font-semibold text-slate-700">
+                                  #{complaint.service_id ?? "-"}
+                                </p>
+                              </div>
+
+                              <div>
+                                <p className="text-xs font-medium text-slate-400">
+                                  Created On
+                                </p>
+
+                                <p className="mt-1 text-sm font-semibold text-slate-700">
+                                  {formatDate(complaint.created_at)}
+                                </p>
+                              </div>
+
+                            </div>
+                          </div>
+
+                          {/* AI/BACKEND INFORMATION */}
+                          <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-5">
+
+                            <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">
+                              Expected Resolution
+                            </p>
+
+                            <p className="mt-3 text-sm leading-6 text-slate-600">
+                              {complaint.expected_resolution || "-"}
+                            </p>
+
+                            <div className="mt-4 border-t border-orange-100 pt-4">
+                              <div className="flex items-center justify-between">
+
+                                <span className="text-xs text-slate-400">
+                                  Routing Confidence
+                                </span>
+
+                                <span className="text-sm font-bold text-green-600">
+                                  {complaint.routing_confidence != null
+                                    ? `${Math.round(
+                                        complaint.routing_confidence * 100
+                                      )}%`
+                                    : "-"}
+                                </span>
+
+                              </div>
+                            </div>
+
+                          </div>
+
+                          {/* ACTION */}
+                          <div className="xl:pl-2">
+                            <button
+                              onClick={() =>
+                                navigate(`/complaint/${complaint.id}`)
+                              }
+                              className="w-full rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md xl:w-auto"
+                            >
+                              View Details →
+                            </button>
+                          </div>
+
+                        </div>
+                      </article>
+                    );
+                  })}
+
+                  <div className="pt-2 text-sm text-slate-400">
+                    Showing {filteredComplaints.length} of{" "}
+                    {complaints.length} complaints
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+          </section>
         </div>
       </main>
     </div>
   );
-};
-
-export default OfficerDashboard;
+}

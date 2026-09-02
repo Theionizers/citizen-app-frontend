@@ -1,317 +1,277 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-const Navbar = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
-  const navigate = useNavigate();
+export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  const role = user?.role;
+  const [user, setUser] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Homepage has the original transparent style.
-  // Other pages use a light navbar so text remains visible.
-  const isHome = location.pathname === "/";
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          localStorage.removeItem("access_token");
+          setUser(null);
+          return;
+        }
+
+        const data = await response.json();
+        setUser(data);
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
-    setMenuOpen(false);
+    setUser(null);
+    setMobileOpen(false);
     navigate("/login");
   };
 
-  const closeMenu = () => {
-    setMenuOpen(false);
+  const role = user?.role;
+
+  const citizenLinks = [
+    {
+      label: "Home",
+      path: "/",
+    },
+    {
+      label: "Services",
+      path: "/#services",
+    },
+    {
+      label: "How It Works",
+      path: "/#how-it-works",
+    },
+    {
+      label: "Features",
+      path: "/#features",
+    },
+    {
+      label: "My Requests",
+      path: "/my-complaints",
+    },
+  ];
+
+  const officerLinks = [
+    {
+      label: "Dashboard",
+      path: "/officer-dashboard",
+    },
+  ];
+
+  const departmentLinks = [
+    {
+      label: "Dashboard",
+      path: "/department-dashboard",
+    },
+  ];
+
+  const adminLinks = [
+    {
+      label: "Dashboard",
+      path: "/admin-dashboard",
+    },
+  ];
+
+  let links = [];
+
+  if (role === "citizen") {
+    links = citizenLinks;
+  } else if (role === "officer") {
+    links = officerLinks;
+  } else if (role === "department") {
+    links = departmentLinks;
+  } else if (role === "admin") {
+    links = adminLinks;
+  }
+
+  const isActive = (path) => {
+    if (path.includes("#")) {
+      return false;
+    }
+
+    return location.pathname === path;
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-5">
+    <header className="relative z-50 mx-auto w-[calc(100%-32px)] max-w-[1385px] pt-4">
+      <nav className="rounded-2xl border border-orange-100 bg-white shadow-[0_6px_24px_rgba(90,60,30,0.06)]">
 
-        {/* Navbar */}
-        <div
-          className={`h-[70px] px-4 sm:px-6 flex items-center justify-between rounded-2xl border shadow-lg transition-all duration-200 ${isHome
-              ? "bg-white/10 backdrop-blur-md border-white/20"
-              : "bg-white border-orange-100 shadow-orange-900/10"
-            }`}
-        >
+        {/* ================= DESKTOP ================= */}
+        <div className="flex min-h-[70px] items-center justify-between gap-5 px-5 py-3 lg:px-6">
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center shrink-0">
-            <img
-              src="/ozoco-logo.png"
-              alt="OZOCO"
-              className="h-11 w-auto object-contain"
-            />
+          {/* LOGO */}
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-3"
+          >
+            <div className="flex items-center">
+              <img
+                src="/ozoco-logo.png"
+                alt="OZOCO"
+                className="h-14 w-32 object-contain"
+              />
+            </div>
+
+
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-6">
+          {/* DESKTOP NAV LINKS */}
+          <div className="hidden items-center gap-1 lg:flex">
+            {links.map((link) => (
+              <Link
+                key={link.label}
+                to={link.path}
+                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-200 ${isActive(link.path)
+                  ? "bg-orange-50 text-orange-600"
+                  : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                  }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
 
-            {/* Home */}
-            <Link
-              to="/"
-              className={`relative text-sm font-medium transition-colors duration-200 ${isHome
-                  ? "text-white hover:text-orange-300"
-                  : "text-slate-700 hover:text-orange-600"
-                }`}
-            >
-              Home
+          {/* RIGHT SIDE */}
+          <div className="hidden items-center gap-2 sm:flex">
 
-              {isHome && (
-                <span className="absolute -bottom-2 left-0 w-full h-0.5 bg-orange-400 rounded-full" />
-              )}
-            </Link>
+            {/* CITIZEN ACTION */}
+            {role === "citizen" && (
+              <Link
+                to="/submit-complaint"
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ${location.pathname === "/submit-complaint"
+                  ? "bg-orange-700 text-white"
+                  : "bg-orange-600 text-white hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md"
+                  }`}
+              >
+                Submit Complaint
+              </Link>
+            )}
 
-            {/* Services */}
-            <a
-              href="/#services"
-              className={`text-sm font-medium transition-colors duration-200 ${isHome
-                  ? "text-white/90 hover:text-orange-300"
-                  : "text-slate-700 hover:text-orange-600"
-                }`}
-            >
-              Services
-            </a>
+            {/* ROLE */}
+            {user && (
+              <div className="hidden rounded-xl border border-orange-100 bg-[#FFF8F1] px-3.5 py-2.5 text-sm font-medium capitalize text-orange-700 md:block">
+                {role}
+              </div>
+            )}
 
-            {/* How It Works */}
-            <a
-              href="/#how-it-works"
-              className={`text-sm font-medium transition-colors duration-200 ${isHome
-                  ? "text-white/90 hover:text-orange-300"
-                  : "text-slate-700 hover:text-orange-600"
-                }`}
-            >
-              How It Works
-            </a>
+            {/* LOGOUT */}
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+              >
+                Logout
+              </button>
+            )}
 
-            {/* Features */}
-            <a
-              href="/#features"
-              className={`text-sm font-medium transition-colors duration-200 ${isHome
-                  ? "text-white/90 hover:text-orange-300"
-                  : "text-slate-700 hover:text-orange-600"
-                }`}
-            >
-              Features
-            </a>
-
-            {/* Divider */}
-            <div
-              className={`h-7 w-px ml-1 ${isHome ? "bg-white/20" : "bg-slate-200"
-                }`}
-            />
-
-            {/* Logged-in user */}
-            {role ? (
-              <>
-                {/* My Requests */}
-                <Link
-                  to="/my-complaints"
-                  className={`text-sm font-semibold transition-colors duration-200 ${isHome
-                      ? "text-white hover:text-orange-300"
-                      : "text-slate-700 hover:text-orange-600"
-                    }`}
-                >
-                  My Requests
-                </Link>
-
-                {/* Submit Complaint */}
-                <Link
-                  to="/submit-complaint"
-                  className="px-5 py-2.5 rounded-xl bg-orange-600 text-white text-sm font-semibold shadow-lg shadow-orange-900/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  Submit Complaint
-                </Link>
-
-                {/* Role */}
-                <span
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold capitalize ${isHome
-                      ? "bg-orange-500/20 border border-orange-400/30 text-orange-200"
-                      : "bg-orange-50 border border-orange-200 text-orange-700"
-                    }`}
-                >
-                  {role}
-                </span>
-
-                {/* Logout */}
-                <button
-                  onClick={handleLogout}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isHome
-                      ? "bg-white/10 border border-white/20 text-white hover:bg-white/20"
-                      : "bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200"
-                    }`}
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                {/* Login */}
-                <Link
-                  to="/login"
-                  className={`text-sm font-semibold transition-colors duration-200 ${isHome
-                      ? "text-white hover:text-orange-300"
-                      : "text-slate-700 hover:text-orange-600"
-                    }`}
-                >
-                  Login
-                </Link>
-
-                {/* Get Started */}
-                <Link
-                  to="/register"
-                  className="px-5 py-2.5 rounded-xl bg-orange-600 text-white text-sm font-semibold shadow-lg shadow-orange-900/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  Get Started
-                </Link>
-              </>
+            {/* LOGIN */}
+            {!user && (
+              <Link
+                to="/login"
+                className="rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md"
+              >
+                Login
+              </Link>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* MOBILE BUTTON */}
           <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className={`lg:hidden w-10 h-10 rounded-xl flex items-center justify-center transition ${isHome
-                ? "bg-white/15 border border-white/20 text-white hover:bg-white/25"
-                : "bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100"
-              }`}
-            aria-label="Toggle menu"
+            type="button"
+            onClick={() => setMobileOpen((prev) => !prev)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 sm:hidden"
+            aria-label="Toggle navigation"
           >
-            <span className="text-xl">
-              {menuOpen ? "✕" : "☰"}
-            </span>
+            {mobileOpen ? "✕" : "☰"}
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        {menuOpen && (
-          <div
-            className={`lg:hidden mt-3 p-4 rounded-2xl backdrop-blur-xl border shadow-xl ${isHome
-                ? "bg-slate-900/90 border-white/10"
-                : "bg-white border-orange-100"
-              }`}
-          >
-            <div className="flex flex-col gap-2">
+        {/* ================= MOBILE ================= */}
+        {mobileOpen && (
+          <div className="border-t border-orange-100 px-5 pb-5 pt-3 sm:hidden">
+            <div className="space-y-1">
 
-              <Link
-                to="/"
-                onClick={closeMenu}
-                className={`px-4 py-3 rounded-xl transition ${isHome
-                    ? "text-white hover:bg-white/10"
-                    : "text-slate-700 hover:bg-orange-50"
-                  }`}
-              >
-                Home
-              </Link>
+              {links.map((link) => (
+                <Link
+                  key={link.label}
+                  to={link.path}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block rounded-lg px-4 py-3 text-sm font-medium transition-colors ${isActive(link.path)
+                    ? "bg-orange-50 text-orange-600"
+                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                    }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
 
-              <a
-                href="/#services"
-                onClick={closeMenu}
-                className={`px-4 py-3 rounded-xl transition ${isHome
-                    ? "text-white hover:bg-white/10"
-                    : "text-slate-700 hover:bg-orange-50"
-                  }`}
-              >
-                Services
-              </a>
+              {/* CITIZEN BUTTON */}
+              {role === "citizen" && (
+                <Link
+                  to="/submit-complaint"
+                  onClick={() => setMobileOpen(false)}
+                  className="mt-2 block rounded-xl bg-orange-600 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-orange-700"
+                >
+                  Submit Complaint
+                </Link>
+              )}
 
-              <a
-                href="/#how-it-works"
-                onClick={closeMenu}
-                className={`px-4 py-3 rounded-xl transition ${isHome
-                    ? "text-white hover:bg-white/10"
-                    : "text-slate-700 hover:bg-orange-50"
-                  }`}
-              >
-                How It Works
-              </a>
+              {/* ROLE */}
+              {user && (
+                <div className="mt-3 rounded-xl border border-orange-100 bg-[#FFF8F1] px-4 py-3 text-sm font-medium capitalize text-orange-700">
+                  Logged in as {role}
+                </div>
+              )}
 
-              <a
-                href="/#features"
-                onClick={closeMenu}
-                className={`px-4 py-3 rounded-xl transition ${isHome
-                    ? "text-white hover:bg-white/10"
-                    : "text-slate-700 hover:bg-orange-50"
-                  }`}
-              >
-                Features
-              </a>
+              {/* LOGOUT */}
+              {user && (
+                <button
+                  onClick={handleLogout}
+                  className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-semibold text-slate-600 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                >
+                  Logout
+                </button>
+              )}
 
-              <div
-                className={`h-px my-1 ${isHome ? "bg-white/10" : "bg-slate-200"
-                  }`}
-              />
-
-              {role ? (
-                <>
-                  <Link
-                    to="/my-complaints"
-                    onClick={closeMenu}
-                    className={`px-4 py-3 rounded-xl transition ${isHome
-                        ? "text-white hover:bg-white/10"
-                        : "text-slate-700 hover:bg-orange-50"
-                      }`}
-                  >
-                    My Requests
-                  </Link>
-
-                  <Link
-                    to="/submit-complaint"
-                    onClick={closeMenu}
-                    className="px-4 py-3 rounded-xl bg-orange-600 text-white text-center font-semibold hover:bg-orange-700 transition"
-                  >
-                    Submit Complaint
-                  </Link>
-
-                  <span
-                    className={`px-4 py-3 rounded-xl font-semibold capitalize ${isHome
-                        ? "bg-orange-500/10 border border-orange-400/20 text-orange-300"
-                        : "bg-orange-50 border border-orange-200 text-orange-700"
-                      }`}
-                  >
-                    {role}
-                  </span>
-
-                  <button
-                    onClick={handleLogout}
-                    className={`px-4 py-3 rounded-xl font-semibold transition ${isHome
-                        ? "bg-white/10 border border-white/10 text-white hover:bg-white/15"
-                        : "bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200"
-                      }`}
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    onClick={closeMenu}
-                    className={`px-4 py-3 rounded-xl transition ${isHome
-                        ? "text-white hover:bg-white/10"
-                        : "text-slate-700 hover:bg-orange-50"
-                      }`}
-                  >
-                    Login
-                  </Link>
-
-                  <Link
-                    to="/register"
-                    onClick={closeMenu}
-                    className="px-4 py-3 rounded-xl bg-orange-600 text-white text-center font-semibold hover:bg-orange-700 transition"
-                  >
-                    Get Started
-                  </Link>
-                </>
+              {/* LOGIN */}
+              {!user && (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="mt-2 block rounded-xl bg-orange-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-orange-700"
+                >
+                  Login
+                </Link>
               )}
             </div>
           </div>
         )}
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
-};
-
-export default Navbar;
+}
