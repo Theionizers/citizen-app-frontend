@@ -1,3 +1,4 @@
+import OfficerDashboard from "./pages/OfficerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SubmitComplaint from "./pages/SubmitComplaint";
 import MyComplaints from "./pages/MyComplaints";
@@ -14,7 +15,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        
+
 
         <Route
           path="/"
@@ -34,18 +35,22 @@ function App() {
           element={<ForgotPassword />}
         />
         <Route
-  path="/submit-complaint"
-  element={<SubmitComplaint />}
-/>
+          path="/submit-complaint"
+          element={<SubmitComplaint />}
+        />
 
-<Route
-  path="/my-complaints"
-  element={<MyComplaints />}
-/>
-<Route
-  path="/complaint/:id"
-  element={<ComplaintDetails />}
-/>
+        <Route
+          path="/my-complaints"
+          element={<MyComplaints />}
+        />
+        <Route
+          path="/complaint/:id"
+          element={<ComplaintDetails />}
+        />
+        <Route
+          path="/officer-dashboard"
+          element={<OfficerDashboard />}
+        />
 
       </Routes>
     </BrowserRouter>
