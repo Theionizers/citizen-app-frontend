@@ -1,0 +1,50 @@
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
+const getToken = () => {
+  return localStorage.getItem("access_token");
+};
+
+const authHeaders = () => ({
+  Authorization: `Bearer ${getToken()}`,
+  "Content-Type": "application/json",
+});
+
+export const officerApi = {
+  getComplaints: async () => {
+    const response = await fetch(`${API_BASE_URL}/complaints/officer`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.detail || "Failed to load officer complaints.");
+    }
+
+    return result;
+  },
+
+  getAssignedComplaints: async () => {
+    const response = await fetch(
+      `${API_BASE_URL}/complaints/officer/assigned`,
+      {
+        method: "GET",
+        headers: authHeaders(),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.detail || "Failed to load assigned complaints."
+      );
+    }
+
+    return result;
+  },
+};
+
+export { API_BASE_URL };
