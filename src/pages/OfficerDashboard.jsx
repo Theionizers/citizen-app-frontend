@@ -12,7 +12,13 @@ const formatStatus = (status = "") =>
 const formatDate = (date) => {
   if (!date) return "-";
 
-  return new Date(date).toLocaleDateString("en-IN", {
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return date;
+  }
+
+  return parsedDate.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -22,7 +28,8 @@ const formatDate = (date) => {
 const statusStyles = {
   assigned: "bg-blue-50 text-blue-600 border-blue-100",
   submitted: "bg-slate-50 text-slate-600 border-slate-200",
-  "in progress": "bg-orange-50 text-orange-600 border-orange-100",
+  "under review": "bg-orange-50 text-orange-600 border-orange-100",
+  "in progress": "bg-amber-50 text-amber-600 border-amber-100",
   "pending citizen": "bg-yellow-50 text-yellow-600 border-yellow-100",
   resolved: "bg-green-50 text-green-600 border-green-100",
   closed: "bg-slate-100 text-slate-600 border-slate-200",
@@ -71,6 +78,7 @@ export default function OfficerDashboard() {
 
       setComplaints(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error("Failed to load officer complaints:", err);
       setError(err.message || "Failed to load complaints.");
     } finally {
       setLoading(false);
@@ -81,17 +89,19 @@ export default function OfficerDashboard() {
     loadComplaints();
   }, []);
 
-  /*
-    Stats are calculated from real backend complaints.
-  */
   const stats = useMemo(() => {
     return {
       total: complaints.length,
 
-      assigned: complaints.filter(
-        (complaint) =>
-          normalizeStatus(complaint.status) === "assigned"
-      ).length,
+      assigned: complaints.filter((complaint) => {
+        const status = normalizeStatus(complaint.status);
+
+        return (
+          complaint.assigned_officer_id != null &&
+          status !== "resolved" &&
+          status !== "closed"
+        );
+      }).length,
 
       inProgress: complaints.filter(
         (complaint) =>
@@ -105,9 +115,6 @@ export default function OfficerDashboard() {
     };
   }, [complaints]);
 
-  /*
-    Search + status filtering.
-  */
   const filteredComplaints = useMemo(() => {
     const query = search.toLowerCase().trim();
 
@@ -136,6 +143,20 @@ export default function OfficerDashboard() {
     setStatusFilter(status);
   };
 
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+  };
+
+  const handleViewDetails = (complaint) => {
+    navigate(`/complaint/${complaint.id}`, {
+      state: {
+        complaint,
+        fromOfficerDashboard: true,
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#FFF8F1] text-slate-900">
       <Navbar />
@@ -143,7 +164,7 @@ export default function OfficerDashboard() {
       <main className="mx-auto max-w-[1500px] px-5 py-8 lg:px-8">
         <div className="grid gap-7 lg:grid-cols-[230px_1fr]">
 
-          {/* ================= SIDEBAR ================= */}
+          {/* SIDEBAR */}
           <aside className="hidden rounded-2xl border border-orange-100 bg-white p-4 shadow-[0_6px_24px_rgba(90,60,30,0.04)] lg:block">
             <nav className="space-y-1">
 
@@ -160,9 +181,9 @@ export default function OfficerDashboard() {
               </button>
 
               <button
-                onClick={() => handleStatusFilter("assigned")}
+                onClick={() => handleStatusFilter("all")}
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
-                  statusFilter === "assigned"
+                  statusFilter === "all"
                     ? "bg-orange-50 font-semibold text-orange-600"
                     : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
                 }`}
@@ -234,7 +255,7 @@ export default function OfficerDashboard() {
             </div>
           </aside>
 
-          {/* ================= MAIN ================= */}
+          {/* MAIN CONTENT */}
           <section>
 
             {/* PAGE HEADER */}
@@ -262,7 +283,7 @@ export default function OfficerDashboard() {
               </button>
             </div>
 
-            {/* ================= WELCOME ================= */}
+            {/* WELCOME */}
             <div className="mb-7 rounded-2xl border border-orange-100 bg-white px-6 py-7 shadow-[0_6px_24px_rgba(90,60,30,0.04)]">
               <p className="text-sm font-semibold text-orange-600">
                 Welcome back
@@ -278,7 +299,7 @@ export default function OfficerDashboard() {
               </p>
             </div>
 
-            {/* ================= STATS ================= */}
+            {/* STATS */}
             <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
               <StatCard
@@ -292,7 +313,7 @@ export default function OfficerDashboard() {
               <StatCard
                 title="Assigned"
                 value={stats.assigned}
-                subtitle="Waiting for action"
+                subtitle="Cases currently assigned"
                 icon="◷"
                 iconClass="bg-blue-50 text-blue-600"
               />
@@ -315,7 +336,7 @@ export default function OfficerDashboard() {
 
             </div>
 
-            {/* ================= COMPLAINTS ================= */}
+            {/* COMPLAINTS */}
             <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-[0_6px_24px_rgba(90,60,30,0.04)]">
 
               {/* SECTION HEADER */}
@@ -358,9 +379,8 @@ export default function OfficerDashboard() {
                       <option value="all">All Status</option>
                       <option value="assigned">Assigned</option>
                       <option value="submitted">Submitted</option>
-                      <option value="in progress">
-                        In Progress
-                      </option>
+                      <option value="under review">Under Review</option>
+                      <option value="in progress">In Progress</option>
                       <option value="pending citizen">
                         Pending Citizen
                       </option>
@@ -413,6 +433,15 @@ export default function OfficerDashboard() {
                       : "No complaint matches your current search or status filter."}
                   </p>
 
+                  {complaints.length > 0 && (
+                    <button
+                      onClick={clearFilters}
+                      className="mt-4 text-sm font-semibold text-orange-600 transition hover:text-orange-700"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+
                 </div>
               )}
 
@@ -432,7 +461,6 @@ export default function OfficerDashboard() {
                         key={complaint.id}
                         className="group relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-5 transition-all duration-200 hover:border-orange-200 hover:shadow-[0_8px_26px_rgba(90,60,30,0.07)] md:p-6"
                       >
-                        {/* LEFT ACCENT */}
                         <div className="absolute left-0 top-0 h-full w-1 bg-orange-500" />
 
                         <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr_auto] xl:items-center">
@@ -492,7 +520,7 @@ export default function OfficerDashboard() {
                             </div>
                           </div>
 
-                          {/* AI/BACKEND INFORMATION */}
+                          {/* EXPECTED RESOLUTION */}
                           <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-5">
 
                             <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">
@@ -526,9 +554,7 @@ export default function OfficerDashboard() {
                           {/* ACTION */}
                           <div className="xl:pl-2">
                             <button
-                              onClick={() =>
-                                navigate(`/complaint/${complaint.id}`)
-                              }
+                              onClick={() => handleViewDetails(complaint)}
                               className="w-full rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md xl:w-auto"
                             >
                               View Details →

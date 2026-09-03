@@ -1,7 +1,20 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+
 import Navbar from "../components/Navbar";
 import { complaintApi } from "../api/complaints";
+import { officerApi } from "../api/officer";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://127.0.0.1:8000";
+
+const normalizeStatus = (status = "") =>
+  status.toLowerCase().replaceAll("_", " ").trim();
 
 const formatStatus = (status) => {
   if (!status) return "Submitted";
@@ -28,16 +41,16 @@ const formatDate = (date) => {
 };
 
 const getProgressStep = (status) => {
-  const normalized = status?.toLowerCase();
+  const normalized = normalizeStatus(status);
 
-  if (normalized === "resolved" || normalized === "closed") {
+  if (normalized === "resolved") {
     return 3;
   }
 
   if (
+    normalized === "under review" ||
     normalized === "in progress" ||
-    normalized === "processing" ||
-    normalized === "under_review"
+    normalized === "processing"
   ) {
     return 2;
   }
@@ -46,16 +59,16 @@ const getProgressStep = (status) => {
 };
 
 const getStatusStyle = (status) => {
-  const normalized = status?.toLowerCase();
+  const normalized = normalizeStatus(status);
 
-  if (normalized === "resolved" || normalized === "closed") {
+  if (normalized === "resolved") {
     return "bg-green-50 text-green-700 border-green-200";
   }
 
   if (
+    normalized === "under review" ||
     normalized === "in progress" ||
-    normalized === "processing" ||
-    normalized === "under_review"
+    normalized === "processing"
   ) {
     return "bg-orange-50 text-orange-700 border-orange-200";
   }
@@ -63,42 +76,240 @@ const getStatusStyle = (status) => {
   return "bg-blue-50 text-blue-700 border-blue-200";
 };
 
-const ComplaintDetails = () => {
+export default function ComplaintDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [complaint, setComplaint] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Complaint passed from Officer Dashboard
+  const passedComplaint = location.state?.complaint;
+  const fromOfficerDashboard =
+    location.state?.fromOfficerDashboard === true;
+
+  const [complaint, setComplaint] = useState(
+    passedComplaint || null
+  );
+
+  const [userRole, setUserRole] = useState(null);
+
+  const [loading, setLoading] = useState(!passedComplaint);
   const [error, setError] = useState("");
 
+  const [selectedStatus, setSelectedStatus] = useState(
+    passedComplaint?.status || ""
+  );
+
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [statusError, setStatusError] = useState("");
+
+  /*
+    Get current logged-in user's role.
+  */
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      setError("Please login to continue.");
+      setLoading(false);
+      return;
+    }
+
+    const loadUser = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/auth/me`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          setError("Unable to verify user.");
+          setLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+        setUserRole(data.role);
+      } catch (err) {
+        console.error("Failed to fetch current user:", err);
+        setError("Unable to verify user.");
+      }
+    };
+
+    loadUser();
+  }, []);
+
+  /*
+    Load complaint.
+
+    Officer:
+    Use complaint already fetched by
+    GET /complaints/officer/assigned.
+
+    Citizen:
+    Use existing GET /complaints/{id}.
+  */
   useEffect(() => {
     const loadComplaint = async () => {
       try {
-        setLoading(true);
         setError("");
 
-        const data = await complaintApi.getById(id);
+        /*
+          If Officer Dashboard already passed the complaint,
+          there is no need to call /complaints/{id}.
+        */
+        if (fromOfficerDashboard && passedComplaint) {
+          setComplaint(passedComplaint);
+          setSelectedStatus(passedComplaint.status || "");
+          setLoading(false);
+          return;
+        }
 
-        setComplaint(data);
+        /*
+          For direct officer access/refresh:
+          fetch assigned complaints and find the requested one.
+        */
+        if (userRole === "officer") {
+          const assignedComplaints =
+            await officerApi.getAssignedComplaints();
+
+          const foundComplaint = assignedComplaints.find(
+            (item) => String(item.id) === String(id)
+          );
+
+          if (!foundComplaint) {
+            throw new Error(
+              "This complaint is not assigned to your officer account."
+            );
+          }
+
+          setComplaint(foundComplaint);
+          setSelectedStatus(foundComplaint.status || "");
+          setLoading(false);
+          return;
+        }
+
+        /*
+          Citizen flow.
+        */
+        if (userRole === "citizen") {
+          const data = await complaintApi.getById(id);
+
+          setComplaint(data);
+          setSelectedStatus(data.status || "");
+          setLoading(false);
+          return;
+        }
+
+        /*
+          Wait until role is available.
+        */
       } catch (err) {
         console.error("Failed to load complaint:", err);
-        setError(err.message || "Unable to load complaint details.");
-      } finally {
+        setError(
+          err.message || "Unable to load complaint details."
+        );
         setLoading(false);
       }
     };
 
-    loadComplaint();
-  }, [id]);
+    /*
+      If complaint was passed from dashboard,
+      no API call is required.
+    */
+    if (fromOfficerDashboard && passedComplaint) {
+      setComplaint(passedComplaint);
+      setSelectedStatus(passedComplaint.status || "");
+      setLoading(false);
+      return;
+    }
 
+    /*
+      Wait for user role before deciding which API to use.
+    */
+    if (userRole) {
+      loadComplaint();
+    }
+  }, [
+    id,
+    userRole,
+    passedComplaint,
+    fromOfficerDashboard,
+  ]);
+
+  /*
+    Update complaint status.
+  */
+  const handleStatusUpdate = async () => {
+    if (!complaint || !selectedStatus) {
+      return;
+    }
+
+    const currentStatus = normalizeStatus(
+      complaint.status
+    );
+
+    const newStatus = normalizeStatus(selectedStatus);
+
+    if (currentStatus === newStatus) {
+      setStatusError(
+        "Please select a different status."
+      );
+      setStatusMessage("");
+      return;
+    }
+
+    try {
+      setUpdatingStatus(true);
+      setStatusError("");
+      setStatusMessage("");
+
+      const updatedComplaint =
+        await officerApi.updateStatus(
+          complaint.id,
+          selectedStatus
+        );
+
+      setComplaint(updatedComplaint);
+
+      setSelectedStatus(
+        updatedComplaint.status || selectedStatus
+      );
+
+      setStatusMessage(
+        "Complaint status updated successfully."
+      );
+    } catch (err) {
+      console.error(
+        "Failed to update complaint status:",
+        err
+      );
+
+      setStatusError(
+        err.message ||
+          "Failed to update complaint status."
+      );
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  /*
+    Loading
+  */
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FFF8F1]">
         <Navbar />
 
-        <main className="pt-32 pb-16 px-5 sm:px-8 lg:px-10">
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-[#FFFDF9] rounded-3xl border border-orange-200 shadow-md shadow-orange-900/10 p-8 text-center">
+        <main className="px-5 pb-16 pt-8 sm:px-8 lg:px-10">
+          <div className="mx-auto max-w-5xl">
+            <div className="rounded-2xl border border-orange-100 bg-white p-8 text-center shadow-sm">
               <p className="text-sm font-medium text-slate-600">
                 Loading complaint details...
               </p>
@@ -109,69 +320,98 @@ const ComplaintDetails = () => {
     );
   }
 
+  /*
+    Error
+  */
   if (error || !complaint) {
     return (
       <div className="min-h-screen bg-[#FFF8F1]">
         <Navbar />
 
-        <main className="pt-32 pb-16 px-5 sm:px-8 lg:px-10">
-          <div className="max-w-5xl mx-auto">
+        <main className="px-5 pb-16 pt-8 sm:px-8 lg:px-10">
+          <div className="mx-auto max-w-5xl">
+
             <button
               type="button"
-              onClick={() => navigate("/my-complaints")}
-              className="mb-6 text-sm font-semibold text-orange-600 hover:text-orange-700 transition"
+              onClick={() =>
+                navigate(
+                  userRole === "officer"
+                    ? "/officer-dashboard"
+                    : "/my-complaints"
+                )
+              }
+              className="mb-6 text-sm font-semibold text-orange-600 transition hover:text-orange-700"
             >
-              ← Back to My Requests
+              ←{" "}
+              {userRole === "officer"
+                ? "Back to Dashboard"
+                : "Back to My Requests"}
             </button>
 
-            <div className="bg-[#FFFDF9] rounded-3xl border border-orange-200 shadow-md shadow-orange-900/10 p-8 text-center">
+            <div className="rounded-2xl border border-orange-100 bg-white p-8 text-center shadow-sm">
               <h1 className="text-xl font-bold text-slate-900">
                 Complaint details not available
               </h1>
 
               <p className="mt-2 text-sm text-slate-500">
-                {error || "Unable to load complaint details."}
+                {error ||
+                  "Unable to load complaint details."}
               </p>
             </div>
+
           </div>
         </main>
       </div>
     );
   }
 
-  const progressStep = getProgressStep(complaint.status);
+  const progressStep = getProgressStep(
+    complaint.status
+  );
 
   return (
     <div className="min-h-screen bg-[#FFF8F1]">
       <Navbar />
 
-      <main className="pt-32 pb-16 px-5 sm:px-8 lg:px-10">
-        <div className="max-w-5xl mx-auto">
+      <main className="px-5 pb-16 pt-8 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-5xl">
 
-          {/* Back Button */}
+          {/* Back */}
           <button
             type="button"
-            onClick={() => navigate("/my-complaints")}
-            className="mb-6 text-sm font-semibold text-orange-600 hover:text-orange-700 transition"
+            onClick={() =>
+              navigate(
+                userRole === "officer"
+                  ? "/officer-dashboard"
+                  : "/my-complaints"
+              )
+            }
+            className="mb-6 text-sm font-semibold text-orange-600 transition hover:text-orange-700"
           >
-            ← Back to My Requests
+            ←{" "}
+            {userRole === "officer"
+              ? "Back to Dashboard"
+              : "Back to My Requests"}
           </button>
 
           {/* Header */}
           <div className="mb-8">
-            <p className="text-sm font-semibold text-orange-600 mb-2">
-              CITIZEN SERVICES
+            <p className="mb-2 text-sm font-semibold text-orange-600">
+              {userRole === "officer"
+                ? "OFFICER PORTAL"
+                : "CITIZEN SERVICES"}
             </p>
 
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <div className="flex flex-wrap items-center gap-3 mb-3">
+
+                <div className="mb-3 flex flex-wrap items-center gap-3">
                   <span className="text-sm font-semibold text-orange-600">
                     OZO-{complaint.id}
                   </span>
 
                   <span
-                    className={`px-3 py-1 rounded-full border text-xs font-semibold ${getStatusStyle(
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusStyle(
                       complaint.status
                     )}`}
                   >
@@ -179,91 +419,99 @@ const ComplaintDetails = () => {
                   </span>
                 </div>
 
-                <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
+                <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
                   Complaint Details
                 </h1>
 
                 <p className="mt-3 text-slate-600">
-                  Track the status and details of your submitted request.
+                  {userRole === "officer"
+                    ? "Review complaint information and update its current status."
+                    : "Track the status and details of your submitted request."}
                 </p>
+
               </div>
 
               <p className="text-sm text-slate-500">
                 {formatDate(complaint.created_at)}
               </p>
+
             </div>
           </div>
 
-          {/* Complaint Card */}
-          <div className="bg-[#FFFDF9] rounded-3xl border border-orange-200 shadow-md shadow-orange-900/10 p-6 sm:p-8">
+          {/* Main Card */}
+          <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-[0_6px_24px_rgba(90,60,30,0.04)] sm:p-8">
 
-            {/* Description */}
+            {/* Complaint */}
             <div>
-              <p className="text-xs font-semibold text-slate-500 mb-2">
+              <p className="mb-2 text-xs font-semibold text-slate-500">
                 COMPLAINT
               </p>
 
-              <p className="text-base sm:text-lg leading-7 text-slate-800">
-                {complaint.description || "No complaint description available."}
+              <p className="text-base leading-7 text-slate-800 sm:text-lg">
+                {complaint.description ||
+                  "No complaint description available."}
               </p>
             </div>
 
-            {/* Complaint Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+            {/* Information */}
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
 
               {/* Department */}
-              <div className="rounded-2xl bg-[#FFF8F1] border border-orange-100 p-4">
-                <p className="text-xs text-slate-500 mb-1">
+              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+                <p className="mb-1 text-xs text-slate-500">
                   Department
                 </p>
 
                 <p className="text-sm font-semibold text-slate-800">
                   {complaint.department_id
-  ? `Department #${complaint.department_id}`
-  : "Not assigned"}
+                    ? `Department #${complaint.department_id}`
+                    : "Not assigned"}
                 </p>
               </div>
 
               {/* Service */}
-              <div className="rounded-2xl bg-[#FFF8F1] border border-orange-100 p-4">
-                <p className="text-xs text-slate-500 mb-1">
+              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+                <p className="mb-1 text-xs text-slate-500">
                   Service
                 </p>
 
                 <p className="text-sm font-semibold text-slate-800">
                   {complaint.service_id
-  ? `Service #${complaint.service_id}`
-  : "Not assigned"}
+                    ? `Service #${complaint.service_id}`
+                    : "Not assigned"}
                 </p>
               </div>
 
               {/* Expected Resolution */}
-              <div className="rounded-2xl bg-[#FFF8F1] border border-orange-100 p-4 sm:col-span-2">
-                <p className="text-xs text-slate-500 mb-1">
+              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4 sm:col-span-2">
+                <p className="mb-1 text-xs text-slate-500">
                   Expected Resolution
                 </p>
 
-                <p className="text-sm font-semibold text-slate-800 leading-6">
-                  {complaint.expected_resolution || "Not available"}
+                <p className="text-sm font-semibold leading-6 text-slate-800">
+                  {complaint.expected_resolution ||
+                    "Not available"}
                 </p>
               </div>
 
               {/* Routing Confidence */}
-              <div className="rounded-2xl bg-[#FFF8F1] border border-orange-100 p-4">
-                <p className="text-xs text-slate-500 mb-1">
+              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+                <p className="mb-1 text-xs text-slate-500">
                   Routing Confidence
                 </p>
 
                 <p className="text-sm font-semibold text-slate-800">
                   {complaint.routing_confidence != null
-                    ? `${Math.round(complaint.routing_confidence * 100)}%`
+                    ? `${Math.round(
+                        complaint.routing_confidence * 100
+                      )}%`
                     : "—"}
                 </p>
               </div>
 
               {/* Assigned Officer */}
-              <div className="rounded-2xl bg-[#FFF8F1] border border-orange-100 p-4">
-                <p className="text-xs text-slate-500 mb-1">
+              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+                <p className="mb-1 text-xs text-slate-500">
                   Assigned Officer
                 </p>
 
@@ -278,16 +526,17 @@ const ComplaintDetails = () => {
 
             {/* Location */}
             <div className="mt-6">
-              <p className="text-xs font-semibold text-slate-500 mb-3">
+              <p className="mb-3 text-xs font-semibold text-slate-500">
                 LOCATION
               </p>
 
-              <div className="rounded-2xl bg-[#FFF8F1] border border-orange-100 p-4">
+              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
                 {complaint.latitude != null &&
-                  complaint.longitude != null ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                complaint.longitude != null ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">
+                      <p className="mb-1 text-xs text-slate-500">
                         Latitude
                       </p>
 
@@ -297,7 +546,7 @@ const ComplaintDetails = () => {
                     </div>
 
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">
+                      <p className="mb-1 text-xs text-slate-500">
                         Longitude
                       </p>
 
@@ -305,6 +554,7 @@ const ComplaintDetails = () => {
                         {complaint.longitude}
                       </p>
                     </div>
+
                   </div>
                 ) : (
                   <p className="text-sm text-slate-500">
@@ -314,65 +564,133 @@ const ComplaintDetails = () => {
               </div>
             </div>
 
-            {/* Request Progress */}
-            <div className="mt-8">
+            {/* Officer Status Update */}
+            {userRole === "officer" && (
+              <div className="mt-8 rounded-xl border border-orange-100 bg-white">
 
-              <p className="text-xs font-semibold text-slate-500 mb-3">
+                <div className="border-b border-orange-100 px-5 py-4">
+                  <p className="text-xs font-semibold text-slate-500">
+                    UPDATE STATUS
+                  </p>
+
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">
+                    Complaint Status
+                  </h2>
+                </div>
+
+                <div className="p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+
+                    <select
+                      value={selectedStatus}
+                      onChange={(e) => {
+                        setSelectedStatus(e.target.value);
+                        setStatusError("");
+                        setStatusMessage("");
+                      }}
+                      className="w-full rounded-xl border border-orange-100 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100 sm:max-w-xs"
+                    >
+                      <option value="under_review">
+                        Under Review
+                      </option>
+
+                      <option value="in_progress">
+                        In Progress
+                      </option>
+
+                      <option value="resolved">
+                        Resolved
+                      </option>
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={handleStatusUpdate}
+                      disabled={updatingStatus}
+                      className="rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-orange-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {updatingStatus
+                        ? "Updating..."
+                        : "Update Status"}
+                    </button>
+
+                  </div>
+
+                  {statusMessage && (
+                    <p className="mt-3 text-sm font-medium text-green-600">
+                      {statusMessage}
+                    </p>
+                  )}
+
+                  {statusError && (
+                    <p className="mt-3 text-sm font-medium text-red-600">
+                      {statusError}
+                    </p>
+                  )}
+                </div>
+
+              </div>
+            )}
+
+            {/* Progress */}
+            <div className="mt-8">
+              <p className="mb-3 text-xs font-semibold text-slate-500">
                 REQUEST PROGRESS
               </p>
 
               <div className="flex items-center">
 
-                {/* Submitted */}
                 <div
-                  className={`w-3 h-3 rounded-full shrink-0 ${progressStep >= 1
+                  className={`h-3 w-3 shrink-0 rounded-full ${
+                    progressStep >= 1
                       ? "bg-orange-500"
                       : "bg-slate-300"
-                    }`}
+                  }`}
                 />
 
                 <div
-                  className={`h-1 flex-1 ${progressStep >= 2
+                  className={`h-1 flex-1 ${
+                    progressStep >= 2
                       ? "bg-orange-500"
                       : "bg-slate-200"
-                    }`}
+                  }`}
                 />
 
-                {/* Processing */}
                 <div
-                  className={`w-3 h-3 rounded-full shrink-0 ${progressStep >= 2
+                  className={`h-3 w-3 shrink-0 rounded-full ${
+                    progressStep >= 2
                       ? "bg-orange-500"
                       : "bg-slate-300"
-                    }`}
+                  }`}
                 />
 
                 <div
-                  className={`h-1 flex-1 ${progressStep >= 3
-                      ? "bg-orange-500"
+                  className={`h-1 flex-1 ${
+                    progressStep >= 3
+                      ? "bg-green-500"
                       : "bg-slate-200"
-                    }`}
+                  }`}
                 />
 
-                {/* Resolved */}
                 <div
-                  className={`w-3 h-3 rounded-full shrink-0 ${progressStep >= 3
+                  className={`h-3 w-3 shrink-0 rounded-full ${
+                    progressStep >= 3
                       ? "bg-green-500"
                       : "bg-slate-300"
-                    }`}
+                  }`}
                 />
 
               </div>
 
-              <div className="flex justify-between mt-2 text-[11px] text-slate-500">
+              <div className="mt-2 flex justify-between text-[11px] text-slate-500">
                 <span>Submitted</span>
-                <span>Processing</span>
+                <span>Under Review / In Progress</span>
                 <span>Resolved</span>
               </div>
-
             </div>
 
             {/* Last Updated */}
-            <div className="mt-8 pt-5 border-t border-orange-100">
+            <div className="mt-8 border-t border-orange-100 pt-5">
               <p className="text-xs text-slate-500">
                 Last updated
               </p>
@@ -387,6 +705,4 @@ const ComplaintDetails = () => {
       </main>
     </div>
   );
-};
-
-export default ComplaintDetails;
+}
