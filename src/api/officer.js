@@ -45,6 +45,29 @@ export const officerApi = {
 
     return result;
   },
+
+  updateStatus: async (complaintId, status) => {
+    const response = await fetch(
+      `${API_BASE_URL}/complaints/${complaintId}/status`,
+      {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          status,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.detail || "Failed to update complaint status."
+      );
+    }
+
+    return result;
+  },
 };
 
 export { API_BASE_URL };

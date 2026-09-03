@@ -121,23 +121,16 @@ export default function Navbar() {
     <header className="relative z-50 mx-auto w-[calc(100%-32px)] max-w-[1385px] pt-4">
       <nav className="rounded-2xl border border-orange-100 bg-white shadow-[0_6px_24px_rgba(90,60,30,0.06)]">
 
-        {/* ================= DESKTOP ================= */}
+        {/* ================= NAVBAR ================= */}
         <div className="flex min-h-[70px] items-center justify-between gap-5 px-5 py-3 lg:px-6">
 
           {/* LOGO */}
-          <Link
-            to="/"
-            className="flex shrink-0 items-center gap-3"
-          >
-            <div className="flex items-center">
-              <img
-                src="/ozoco-logo.png"
-                alt="OZOCO"
-                className="h-14 w-32 object-contain"
-              />
-            </div>
-
-
+          <Link to="/" className="flex shrink-0 items-center">
+            <img
+              src="/ozoco-logo.png"
+              alt="OZOCO"
+              className="h-14 w-32 object-contain"
+            />
           </Link>
 
           {/* DESKTOP NAV LINKS */}
@@ -146,27 +139,29 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 to={link.path}
-                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-200 ${isActive(link.path)
-                  ? "bg-orange-50 text-orange-600"
-                  : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                  }`}
+                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                  isActive(link.path)
+                    ? "bg-orange-50 text-orange-600"
+                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}
               >
                 {link.label}
               </Link>
             ))}
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="hidden items-center gap-2 sm:flex">
+          {/* RIGHT SIDE - DESKTOP */}
+          <div className="hidden items-center gap-2 lg:flex">
 
             {/* CITIZEN ACTION */}
             {role === "citizen" && (
               <Link
                 to="/submit-complaint"
-                className={`rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ${location.pathname === "/submit-complaint"
-                  ? "bg-orange-700 text-white"
-                  : "bg-orange-600 text-white hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md"
-                  }`}
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ${
+                  location.pathname === "/submit-complaint"
+                    ? "bg-orange-700 text-white"
+                    : "bg-orange-600 text-white hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md"
+                }`}
               >
                 Submit Complaint
               </Link>
@@ -174,7 +169,7 @@ export default function Navbar() {
 
             {/* ROLE */}
             {user && (
-              <div className="hidden rounded-xl border border-orange-100 bg-[#FFF8F1] px-3.5 py-2.5 text-sm font-medium capitalize text-orange-700 md:block">
+              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] px-3.5 py-2.5 text-sm font-medium capitalize text-orange-700">
                 {role}
               </div>
             )}
@@ -200,31 +195,33 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* MOBILE BUTTON */}
+          {/* MOBILE MENU BUTTON */}
           <button
             type="button"
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 sm:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 lg:hidden"
             aria-label="Toggle navigation"
           >
             {mobileOpen ? "✕" : "☰"}
           </button>
         </div>
 
-        {/* ================= MOBILE ================= */}
+        {/* ================= MOBILE MENU ================= */}
         {mobileOpen && (
-          <div className="border-t border-orange-100 px-5 pb-5 pt-3 sm:hidden">
+          <div className="border-t border-orange-100 px-5 pb-5 pt-3 lg:hidden">
             <div className="space-y-1">
 
+              {/* LINKS */}
               {links.map((link) => (
                 <Link
                   key={link.label}
                   to={link.path}
                   onClick={() => setMobileOpen(false)}
-                  className={`block rounded-lg px-4 py-3 text-sm font-medium transition-colors ${isActive(link.path)
-                    ? "bg-orange-50 text-orange-600"
-                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                    }`}
+                  className={`block rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+                    isActive(link.path)
+                      ? "bg-orange-50 text-orange-600"
+                      : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -235,7 +232,7 @@ export default function Navbar() {
                 <Link
                   to="/submit-complaint"
                   onClick={() => setMobileOpen(false)}
-                  className="mt-2 block rounded-xl bg-orange-600 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-orange-700"
+                  className="mt-2 block rounded-xl bg-orange-600 px-4 py-3 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-orange-700"
                 >
                   Submit Complaint
                 </Link>
@@ -252,7 +249,7 @@ export default function Navbar() {
               {user && (
                 <button
                   onClick={handleLogout}
-                  className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-semibold text-slate-600 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-600 transition-colors duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
                 >
                   Logout
                 </button>
@@ -263,7 +260,7 @@ export default function Navbar() {
                 <Link
                   to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="mt-2 block rounded-xl bg-orange-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-orange-700"
+                  className="mt-2 block rounded-xl bg-orange-600 px-4 py-3 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-orange-700"
                 >
                   Login
                 </Link>
