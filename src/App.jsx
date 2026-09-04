@@ -19,7 +19,7 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* HOME */}
+        {/* ================= HOME ================= */}
         <Route
           path="/"
           element={
@@ -29,42 +29,80 @@ function App() {
           }
         />
 
-        {/* AUTH */}
-        <Route path="/login" element={<Login />} />
+        {/* ================= AUTH ================= */}
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
         <Route
           path="/forgot-password"
           element={<ForgotPassword />}
         />
 
-        {/* CITIZEN */}
+        {/* ================= CITIZEN ================= */}
+
         <Route
           path="/submit-complaint"
-          element={<SubmitComplaint />}
+          element={
+            <ProtectedRoute allowedRoles={["citizen"]}>
+              <SubmitComplaint />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/my-complaints"
-          element={<MyComplaints />}
+          element={
+            <ProtectedRoute allowedRoles={["citizen"]}>
+              <MyComplaints />
+            </ProtectedRoute>
+          }
         />
+
+        {/* ================= COMPLAINT DETAILS ================= */}
+        {/* Citizen + Officer + Admin can view details */}
 
         <Route
           path="/complaint/:id"
-          element={<ComplaintDetails />}
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                "citizen",
+                "officer",
+                "admin",
+              ]}
+            >
+              <ComplaintDetails />
+            </ProtectedRoute>
+          }
         />
 
-        {/* OFFICER */}
+        {/* ================= OFFICER ================= */}
+
         <Route
           path="/officer-dashboard"
-          element={<OfficerDashboard />}
+          element={
+            <ProtectedRoute allowedRoles={["officer"]}>
+              <OfficerDashboard />
+            </ProtectedRoute>
+          }
         />
 
-        {/* ADMIN */}
+        {/* ================= ADMIN ================= */}
+
         <Route
           path="/admin-dashboard"
-          element={<AdminDashboard />}
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
         />
 
       </Routes>
