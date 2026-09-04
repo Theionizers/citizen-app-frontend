@@ -13,6 +13,15 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   "http://127.0.0.1:8000";
 
+const getToken = () => {
+  return localStorage.getItem("access_token");
+};
+
+const authHeaders = () => ({
+  Authorization: `Bearer ${getToken()}`,
+  "Content-Type": "application/json",
+});
+
 const normalizeStatus = (status = "") =>
   status.toLowerCase().replaceAll("_", " ").trim();
 
@@ -40,7 +49,10 @@ const formatDate = (date) => {
 const getProgressStep = (status) => {
   const normalized = normalizeStatus(status);
 
-  if (normalized === "resolved" || normalized === "closed") {
+  if (
+    normalized === "resolved" ||
+    normalized === "closed"
+  ) {
     return 3;
   }
 
@@ -58,7 +70,10 @@ const getProgressStep = (status) => {
 const getStatusStyle = (status) => {
   const normalized = normalizeStatus(status);
 
-  if (normalized === "resolved" || normalized === "closed") {
+  if (
+    normalized === "resolved" ||
+    normalized === "closed"
+  ) {
     return "bg-green-50 text-green-700 border-green-200";
   }
 
@@ -83,8 +98,13 @@ export default function ComplaintDetails() {
   const location = useLocation();
 
   const passedComplaint = location.state?.complaint;
+
   const fromOfficerDashboard =
     location.state?.fromOfficerDashboard === true;
+
+  const fromAdminDashboard =
+    location.state?.fromAdminDashboard === true;
+
   const fromCitizenRequests =
     location.state?.fromCitizenRequests === true;
 
@@ -101,13 +121,20 @@ export default function ComplaintDetails() {
     passedComplaint?.status || ""
   );
 
-  const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [statusError, setStatusError] = useState("");
+  const [updatingStatus, setUpdatingStatus] =
+    useState(false);
 
-  // Get current user
+  const [statusMessage, setStatusMessage] =
+    useState("");
+
+  const [statusError, setStatusError] =
+    useState("");
+
+  /*
+    Get current logged-in user
+  */
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
+    const token = getToken();
 
     if (!token) {
       setError("Please login to continue.");
@@ -121,9 +148,7 @@ export default function ComplaintDetails() {
           `${API_BASE_URL}/auth/me`,
           {
             method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: authHeaders(),
           }
         );
 
@@ -135,8 +160,15 @@ export default function ComplaintDetails() {
 
         setUserRole(data.role);
       } catch (err) {
-        console.error("Failed to fetch current user:", err);
-        setError(err.message || "Unable to verify user.");
+        console.error(
+          "Failed to fetch current user:",
+          err
+        );
+
+        setError(
+          err.message || "Unable to verify user."
+        );
+
         setLoading(false);
       }
     };
@@ -144,36 +176,48 @@ export default function ComplaintDetails() {
     loadUser();
   }, []);
 
-  // Load complaint
+  /*
+    Load complaint
+
+    Officer:
+    GET /complaints/officer/assigned
+
+    Admin:
+    GET /complaints/admin/{complaint_id}
+
+    Citizen:
+    GET /complaints/{complaint_id}
+  */
   useEffect(() => {
     const loadComplaint = async () => {
       try {
         setError("");
 
-        // Complaint already passed from Officer Dashboard
-        if (fromOfficerDashboard && passedComplaint) {
+        /*
+          Complaint already passed from Dashboard.
+          No API call required.
+        */
+        if (passedComplaint) {
           setComplaint(passedComplaint);
-          setSelectedStatus(passedComplaint.status || "");
+          setSelectedStatus(
+            passedComplaint.status || ""
+          );
           setLoading(false);
           return;
         }
 
-        // Complaint already passed from Citizen My Requests
-        if (fromCitizenRequests && passedComplaint) {
-          setComplaint(passedComplaint);
-          setSelectedStatus(passedComplaint.status || "");
-          setLoading(false);
-          return;
-        }
-
-        // Officer opens details directly or refreshes page
+        /*
+          Officer
+        */
         if (userRole === "officer") {
           const assignedComplaints =
             await officerApi.getAssignedComplaints();
 
-          const foundComplaint = assignedComplaints.find(
-            (item) => String(item.id) === String(id)
-          );
+          const foundComplaint =
+            assignedComplaints.find(
+              (item) =>
+                String(item.id) === String(id)
+            );
 
           if (!foundComplaint) {
             throw new Error(
@@ -182,40 +226,77 @@ export default function ComplaintDetails() {
           }
 
           setComplaint(foundComplaint);
-          setSelectedStatus(foundComplaint.status || "");
+
+          setSelectedStatus(
+            foundComplaint.status || ""
+          );
+
           setLoading(false);
           return;
         }
 
-        // Citizen opens details directly or refreshes page
-        if (userRole === "citizen") {
-          const data = await complaintApi.getById(id);
+        /*
+          Admin
+
+          Admin has a dedicated endpoint:
+          GET /complaints/admin/{complaint_id}
+        */
+        if (userRole === "admin") {
+          const response = await fetch(
+            `${API_BASE_URL}/complaints/admin/${id}`,
+            {
+              method: "GET",
+              headers: authHeaders(),
+            }
+          );
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              data.detail ||
+              "Failed to load complaint details."
+            );
+          }
 
           setComplaint(data);
+
           setSelectedStatus(data.status || "");
+
           setLoading(false);
           return;
         }
 
+        /*
+          Citizen
+        */
+        if (userRole === "citizen") {
+          const data =
+            await complaintApi.getById(id);
+
+          setComplaint(data);
+
+          setSelectedStatus(
+            data.status || ""
+          );
+
+          setLoading(false);
+          return;
+        }
       } catch (err) {
-        console.error("Failed to load complaint:", err);
-        setError(
-          err.message || "Unable to load complaint details."
+        console.error(
+          "Failed to load complaint:",
+          err
         );
+
+        setError(
+          err.message ||
+          "Unable to load complaint details."
+        );
+
         setLoading(false);
       }
     };
-
-    // Don't make unnecessary API call if complaint is already passed
-    if (
-      (fromOfficerDashboard || fromCitizenRequests) &&
-      passedComplaint
-    ) {
-      setComplaint(passedComplaint);
-      setSelectedStatus(passedComplaint.status || "");
-      setLoading(false);
-      return;
-    }
 
     if (userRole) {
       loadComplaint();
@@ -224,11 +305,34 @@ export default function ComplaintDetails() {
     id,
     userRole,
     passedComplaint,
-    fromOfficerDashboard,
-    fromCitizenRequests,
   ]);
 
-  // Update status
+  /*
+    Back navigation according to role/source
+  */
+  const handleBack = () => {
+    if (
+      fromAdminDashboard ||
+      userRole === "admin"
+    ) {
+      navigate("/admin-dashboard");
+      return;
+    }
+
+    if (
+      fromOfficerDashboard ||
+      userRole === "officer"
+    ) {
+      navigate("/officer-dashboard");
+      return;
+    }
+
+    navigate("/my-complaints");
+  };
+
+  /*
+    Update Officer complaint status
+  */
   const handleStatusUpdate = async () => {
     if (!complaint || !selectedStatus) {
       return;
@@ -238,13 +342,17 @@ export default function ComplaintDetails() {
       complaint.status
     );
 
-    const newStatus = normalizeStatus(selectedStatus);
+    const newStatus = normalizeStatus(
+      selectedStatus
+    );
 
     if (currentStatus === newStatus) {
       setStatusError(
         "Please select a different status."
       );
+
       setStatusMessage("");
+
       return;
     }
 
@@ -262,7 +370,8 @@ export default function ComplaintDetails() {
       setComplaint(updatedComplaint);
 
       setSelectedStatus(
-        updatedComplaint.status || selectedStatus
+        updatedComplaint.status ||
+        selectedStatus
       );
 
       setStatusMessage(
@@ -283,7 +392,9 @@ export default function ComplaintDetails() {
     }
   };
 
-  // Loading
+  /*
+    Loading state
+  */
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FFF8F1]">
@@ -291,18 +402,22 @@ export default function ComplaintDetails() {
 
         <main className="px-5 pb-16 pt-8 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-5xl">
+
             <div className="rounded-2xl border border-orange-100 bg-white p-8 text-center shadow-sm">
               <p className="text-sm font-medium text-slate-600">
                 Loading complaint details...
               </p>
             </div>
+
           </div>
         </main>
       </div>
     );
   }
 
-  // Error
+  /*
+    Error state
+  */
   if (error || !complaint) {
     return (
       <div className="min-h-screen bg-[#FFF8F1]">
@@ -313,22 +428,14 @@ export default function ComplaintDetails() {
 
             <button
               type="button"
-              onClick={() =>
-                navigate(
-                  userRole === "officer"
-                    ? "/officer-dashboard"
-                    : "/my-complaints"
-                )
-              }
+              onClick={handleBack}
               className="mb-6 text-sm font-semibold text-orange-600 transition hover:text-orange-700"
             >
-              ←{" "}
-              {userRole === "officer"
-                ? "Back to Dashboard"
-                : "Back to My Requests"}
+              ← Back to Dashboard
             </button>
 
             <div className="rounded-2xl border border-orange-100 bg-white p-8 text-center shadow-sm">
+
               <h1 className="text-xl font-bold text-slate-900">
                 Complaint details not available
               </h1>
@@ -337,6 +444,7 @@ export default function ComplaintDetails() {
                 {error ||
                   "Unable to load complaint details."}
               </p>
+
             </div>
 
           </div>
@@ -349,6 +457,13 @@ export default function ComplaintDetails() {
     complaint.status
   );
 
+  /*
+    Role-specific text
+  */
+  const isAdmin = userRole === "admin";
+  const isOfficer = userRole === "officer";
+  const isCitizen = userRole === "citizen";
+
   return (
     <div className="min-h-screen bg-[#FFF8F1]">
       <Navbar />
@@ -356,37 +471,36 @@ export default function ComplaintDetails() {
       <main className="px-5 pb-16 pt-8 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-5xl">
 
-          {/* Back */}
+          {/* ================= BACK ================= */}
           <button
             type="button"
-            onClick={() =>
-              navigate(
-                userRole === "officer"
-                  ? "/officer-dashboard"
-                  : "/my-complaints"
-              )
-            }
+            onClick={handleBack}
             className="mb-6 text-sm font-semibold text-orange-600 transition hover:text-orange-700"
           >
             ←{" "}
-            {userRole === "officer"
-              ? "Back to Dashboard"
-              : "Back to My Requests"}
+            {isCitizen
+              ? "Back to My Requests"
+              : "Back to Dashboard"}
           </button>
 
-          {/* Header */}
+          {/* ================= HEADER ================= */}
           <div className="mb-8">
+
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-orange-600">
-              {userRole === "officer"
-                ? "Officer Portal"
-                : "Citizen Services"}
+              {isAdmin
+                ? "Administration"
+                : isOfficer
+                  ? "Officer Portal"
+                  : "Citizen Services"}
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+
               <div>
 
                 <div className="mb-3 flex flex-wrap items-center gap-3">
-                  <span className="text-sm font-semibold text-orange-600">
+
+                  <span className="text-sm font-bold text-orange-600">
                     OZO-{complaint.id}
                   </span>
 
@@ -395,8 +509,11 @@ export default function ComplaintDetails() {
                       complaint.status
                     )}`}
                   >
-                    {formatStatus(complaint.status)}
+                    {formatStatus(
+                      complaint.status
+                    )}
                   </span>
+
                 </div>
 
                 <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
@@ -404,25 +521,30 @@ export default function ComplaintDetails() {
                 </h1>
 
                 <p className="mt-3 text-slate-600">
-                  {userRole === "officer"
-                    ? "Review complaint information and update its current status."
-                    : "Track the status and details of your submitted request."}
+                  {isAdmin
+                    ? "Review complaint information and monitor its current status."
+                    : isOfficer
+                      ? "Review complaint information and update its current status."
+                      : "Track the status and details of your submitted request."}
                 </p>
 
               </div>
 
               <p className="text-sm text-slate-500">
-                {formatDate(complaint.created_at)}
+                {formatDate(
+                  complaint.created_at
+                )}
               </p>
 
             </div>
           </div>
 
-          {/* Main Card */}
+          {/* ================= MAIN CARD ================= */}
           <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-[0_6px_24px_rgba(90,60,30,0.04)] sm:p-8">
 
-            {/* Complaint Description */}
+            {/* Complaint */}
             <div>
+
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Complaint
               </p>
@@ -431,13 +553,14 @@ export default function ComplaintDetails() {
                 {complaint.description ||
                   "No complaint description available."}
               </p>
+
             </div>
 
-            {/* Complaint Information */}
+            {/* Information */}
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
 
               {/* Department */}
-              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+              <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
                 <p className="mb-1 text-xs text-slate-500">
                   Department
                 </p>
@@ -450,7 +573,7 @@ export default function ComplaintDetails() {
               </div>
 
               {/* Service */}
-              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
                 <p className="mb-1 text-xs text-slate-500">
                   Service
                 </p>
@@ -463,7 +586,8 @@ export default function ComplaintDetails() {
               </div>
 
               {/* Expected Resolution */}
-              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4 sm:col-span-2">
+              <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 sm:col-span-2">
+
                 <p className="mb-1 text-xs text-slate-500">
                   Expected Resolution
                 </p>
@@ -472,25 +596,31 @@ export default function ComplaintDetails() {
                   {complaint.expected_resolution ||
                     "Not available"}
                 </p>
+
               </div>
 
               {/* Routing Confidence */}
-              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+              <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+
                 <p className="mb-1 text-xs text-slate-500">
                   Routing Confidence
                 </p>
 
-                <p className="text-sm font-semibold text-slate-800">
-                  {complaint.routing_confidence != null
+                <p className="text-sm font-semibold text-green-700">
+                  {complaint.routing_confidence !=
+                    null
                     ? `${Math.round(
-                      complaint.routing_confidence * 100
+                      complaint.routing_confidence *
+                      100
                     )}%`
                     : "—"}
                 </p>
+
               </div>
 
               {/* Assigned Officer */}
-              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+
                 <p className="mb-1 text-xs text-slate-500">
                   Assigned Officer
                 </p>
@@ -500,17 +630,19 @@ export default function ComplaintDetails() {
                     ? `Officer #${complaint.assigned_officer_id}`
                     : "Not assigned"}
                 </p>
+
               </div>
 
             </div>
 
             {/* Location */}
             <div className="mt-6">
+
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Location
               </p>
 
-              <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+              <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
 
                 {complaint.latitude != null &&
                   complaint.longitude != null ? (
@@ -546,11 +678,12 @@ export default function ComplaintDetails() {
               </div>
             </div>
 
-            {/* Officer Status Update */}
-            {userRole === "officer" && (
-              <div className="mt-8 rounded-xl border border-orange-100 bg-white">
+            {/* ================= OFFICER STATUS ================= */}
+            {isOfficer && (
+              <div className="mt-8 rounded-xl border border-orange-200 bg-orange-50/40">
 
-                <div className="border-b border-orange-100 px-5 py-4">
+                <div className="border-b border-orange-200 px-5 py-4">
+
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Update Status
                   </p>
@@ -558,6 +691,7 @@ export default function ComplaintDetails() {
                   <h2 className="mt-1 text-lg font-bold text-slate-900">
                     Complaint Status
                   </h2>
+
                 </div>
 
                 <div className="p-5">
@@ -567,11 +701,14 @@ export default function ComplaintDetails() {
                     <select
                       value={selectedStatus}
                       onChange={(e) => {
-                        setSelectedStatus(e.target.value);
+                        setSelectedStatus(
+                          e.target.value
+                        );
+
                         setStatusError("");
                         setStatusMessage("");
                       }}
-                      className="w-full rounded-xl border border-orange-100 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100 sm:max-w-xs"
+                      className="w-full rounded-xl border border-orange-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100 sm:max-w-xs"
                     >
                       <option value="under_review">
                         Under Review
@@ -588,7 +725,9 @@ export default function ComplaintDetails() {
 
                     <button
                       type="button"
-                      onClick={handleStatusUpdate}
+                      onClick={
+                        handleStatusUpdate
+                      }
                       disabled={updatingStatus}
                       className="rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-orange-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -615,7 +754,7 @@ export default function ComplaintDetails() {
               </div>
             )}
 
-            {/* Progress */}
+            {/* ================= PROGRESS ================= */}
             <div className="mt-8">
 
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -663,7 +802,9 @@ export default function ComplaintDetails() {
 
               <div className="mt-2 flex justify-between text-[11px] text-slate-500">
                 <span>Submitted</span>
-                <span>Under Review / In Progress</span>
+                <span>
+                  Under Review / In Progress
+                </span>
                 <span>Resolved</span>
               </div>
 
@@ -677,7 +818,9 @@ export default function ComplaintDetails() {
               </p>
 
               <p className="mt-1 text-sm font-semibold text-slate-800">
-                {formatDate(complaint.updated_at)}
+                {formatDate(
+                  complaint.updated_at
+                )}
               </p>
 
             </div>

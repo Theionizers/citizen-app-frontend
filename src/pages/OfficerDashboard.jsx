@@ -7,7 +7,9 @@ const normalizeStatus = (status = "") =>
   status.toLowerCase().replaceAll("_", " ").trim();
 
 const formatStatus = (status = "") =>
-  normalizeStatus(status).replace(/\b\w/g, (char) => char.toUpperCase());
+  normalizeStatus(status).replace(/\b\w/g, (char) =>
+    char.toUpperCase()
+  );
 
 const formatDate = (date) => {
   if (!date) return "-";
@@ -28,29 +30,45 @@ const formatDate = (date) => {
 const statusStyles = {
   assigned: "bg-blue-50 text-blue-600 border-blue-100",
   submitted: "bg-slate-50 text-slate-600 border-slate-200",
-  "under review": "bg-orange-50 text-orange-600 border-orange-100",
-  "in progress": "bg-amber-50 text-amber-600 border-amber-100",
-  "pending citizen": "bg-yellow-50 text-yellow-600 border-yellow-100",
+  "under review":
+    "bg-orange-50 text-orange-600 border-orange-100",
+  "in progress":
+    "bg-amber-50 text-amber-600 border-amber-100",
+  "pending citizen":
+    "bg-yellow-50 text-yellow-600 border-yellow-100",
   resolved: "bg-green-50 text-green-600 border-green-100",
   closed: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
-function StatCard({ title, value, subtitle, icon, iconClass }) {
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  cardClass,
+  iconClass,
+}) {
   return (
-    <div className="group rounded-2xl border border-orange-100 bg-white p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
-      <div className="flex items-start justify-between">
+    <div
+      className={`group rounded-2xl border p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)] ${cardClass}`}
+    >
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-500">{title}</p>
+          <p className="text-sm font-medium text-slate-700">
+            {title}
+          </p>
 
           <p className="mt-2 text-3xl font-bold text-slate-900">
             {value}
           </p>
 
-          <p className="mt-1 text-xs text-slate-400">{subtitle}</p>
+          <p className="mt-1 text-xs text-slate-600">
+            {subtitle}
+          </p>
         </div>
 
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconClass}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
         >
           <span className="text-lg">{icon}</span>
         </div>
@@ -78,8 +96,14 @@ export default function OfficerDashboard() {
 
       setComplaints(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to load officer complaints:", err);
-      setError(err.message || "Failed to load complaints.");
+      console.error(
+        "Failed to load officer complaints:",
+        err
+      );
+
+      setError(
+        err.message || "Failed to load complaints."
+      );
     } finally {
       setLoading(false);
     }
@@ -94,7 +118,9 @@ export default function OfficerDashboard() {
       total: complaints.length,
 
       assigned: complaints.filter((complaint) => {
-        const status = normalizeStatus(complaint.status);
+        const status = normalizeStatus(
+          complaint.status
+        );
 
         return (
           complaint.assigned_officer_id != null &&
@@ -105,12 +131,14 @@ export default function OfficerDashboard() {
 
       inProgress: complaints.filter(
         (complaint) =>
-          normalizeStatus(complaint.status) === "in progress"
+          normalizeStatus(complaint.status) ===
+          "in progress"
       ).length,
 
       resolved: complaints.filter(
         (complaint) =>
-          normalizeStatus(complaint.status) === "resolved"
+          normalizeStatus(complaint.status) ===
+          "resolved"
       ).length,
     };
   }, [complaints]);
@@ -122,14 +150,18 @@ export default function OfficerDashboard() {
       const description =
         complaint.description?.toLowerCase() || "";
 
-      const complaintId = String(complaint.id || "");
+      const complaintId = String(
+        complaint.id || ""
+      );
 
       const matchesSearch =
         !query ||
         complaintId.includes(query) ||
         description.includes(query);
 
-      const complaintStatus = normalizeStatus(complaint.status);
+      const complaintStatus = normalizeStatus(
+        complaint.status
+      );
 
       const matchesStatus =
         statusFilter === "all" ||
@@ -164,77 +196,89 @@ export default function OfficerDashboard() {
       <main className="mx-auto max-w-[1500px] px-5 py-8 lg:px-8">
         <div className="grid gap-7 lg:grid-cols-[230px_1fr]">
 
-          {/* SIDEBAR */}
+          {/* ================= SIDEBAR ================= */}
           <aside className="hidden rounded-2xl border border-orange-100 bg-white p-4 shadow-[0_6px_24px_rgba(90,60,30,0.04)] lg:block">
             <nav className="space-y-1">
 
               <button
-                onClick={() => handleStatusFilter("all")}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                  statusFilter === "all"
+                type="button"
+                onClick={() =>
+                  handleStatusFilter("all")
+                }
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${statusFilter === "all"
                     ? "bg-orange-50 text-orange-600"
                     : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                }`}
+                  }`}
               >
                 <span>▦</span>
                 Dashboard
               </button>
 
               <button
-                onClick={() => handleStatusFilter("all")}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
-                  statusFilter === "all"
+                type="button"
+                onClick={() =>
+                  handleStatusFilter("all")
+                }
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${statusFilter === "all"
                     ? "bg-orange-50 font-semibold text-orange-600"
                     : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                }`}
+                  }`}
               >
                 <span>□</span>
                 My Cases
               </button>
 
               <button
-                onClick={() => handleStatusFilter("in progress")}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
-                  statusFilter === "in progress"
+                type="button"
+                onClick={() =>
+                  handleStatusFilter("in progress")
+                }
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${statusFilter === "in progress"
                     ? "bg-orange-50 font-semibold text-orange-600"
                     : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                }`}
+                  }`}
               >
                 <span>◷</span>
                 In Progress
               </button>
 
               <button
-                onClick={() => handleStatusFilter("pending citizen")}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
-                  statusFilter === "pending citizen"
+                type="button"
+                onClick={() =>
+                  handleStatusFilter("pending citizen")
+                }
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${statusFilter === "pending citizen"
                     ? "bg-orange-50 font-semibold text-orange-600"
                     : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                }`}
+                  }`}
               >
                 <span>⌛</span>
                 Pending Citizen
               </button>
 
               <button
-                onClick={() => handleStatusFilter("resolved")}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
-                  statusFilter === "resolved"
+                type="button"
+                onClick={() =>
+                  handleStatusFilter("resolved")
+                }
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${statusFilter === "resolved"
                     ? "bg-orange-50 font-semibold text-orange-600"
                     : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                }`}
+                  }`}
               >
                 <span>✓</span>
                 Resolved
               </button>
 
               <button
-                onClick={() => handleStatusFilter("closed")}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${
-                  statusFilter === "closed"
+                type="button"
+                onClick={() =>
+                  handleStatusFilter("closed")
+                }
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${statusFilter === "closed"
                     ? "bg-orange-50 font-semibold text-orange-600"
                     : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                }`}
+                  }`}
               >
                 <span>□</span>
                 Closed
@@ -250,16 +294,18 @@ export default function OfficerDashboard() {
               </p>
 
               <p className="mt-1 text-xs leading-5 text-slate-500">
-                Manage complaints assigned to your officer account.
+                Manage complaints assigned to your officer
+                account.
               </p>
             </div>
           </aside>
 
-          {/* MAIN CONTENT */}
+          {/* ================= MAIN CONTENT ================= */}
           <section>
 
             {/* PAGE HEADER */}
             <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+
               <div>
                 <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-orange-600">
                   Officer Portal
@@ -275,17 +321,23 @@ export default function OfficerDashboard() {
               </div>
 
               <button
+                type="button"
                 onClick={loadComplaints}
                 disabled={loading}
                 className="rounded-xl border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                ↻ {loading ? "Refreshing..." : "Refresh"}
+                ↻{" "}
+                {loading
+                  ? "Refreshing..."
+                  : "Refresh"}
               </button>
+
             </div>
 
             {/* WELCOME */}
-            <div className="mb-7 rounded-2xl border border-orange-100 bg-white px-6 py-7 shadow-[0_6px_24px_rgba(90,60,30,0.04)]">
-              <p className="text-sm font-semibold text-orange-600">
+            <div className="mb-7 rounded-2xl border border-orange-200 bg-orange-50 p-6 shadow-[0_6px_24px_rgba(90,60,30,0.04)]">
+
+              <p className="text-sm font-semibold text-orange-700">
                 Welcome back
               </p>
 
@@ -293,13 +345,14 @@ export default function OfficerDashboard() {
                 Manage your assigned cases
               </h2>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                Keep track of citizen complaints and their current status
-                from one place.
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-orange-900/70">
+                Keep track of citizen complaints and their
+                current status from one place.
               </p>
+
             </div>
 
-            {/* STATS */}
+            {/* ================= STATS ================= */}
             <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
               <StatCard
@@ -307,7 +360,8 @@ export default function OfficerDashboard() {
                 value={stats.total}
                 subtitle="All assigned cases"
                 icon="▣"
-                iconClass="bg-orange-50 text-orange-600"
+                cardClass="border-orange-300 bg-orange-100"
+                iconClass="bg-orange-200 text-orange-700"
               />
 
               <StatCard
@@ -315,7 +369,8 @@ export default function OfficerDashboard() {
                 value={stats.assigned}
                 subtitle="Cases currently assigned"
                 icon="◷"
-                iconClass="bg-blue-50 text-blue-600"
+                cardClass="border-blue-300 bg-blue-100"
+                iconClass="bg-blue-200 text-blue-700"
               />
 
               <StatCard
@@ -323,7 +378,8 @@ export default function OfficerDashboard() {
                 value={stats.inProgress}
                 subtitle="Currently being handled"
                 icon="↻"
-                iconClass="bg-amber-50 text-amber-600"
+                cardClass="border-amber-300 bg-amber-100"
+                iconClass="bg-amber-200 text-amber-700"
               />
 
               <StatCard
@@ -331,16 +387,18 @@ export default function OfficerDashboard() {
                 value={stats.resolved}
                 subtitle="Successfully resolved"
                 icon="✓"
-                iconClass="bg-green-50 text-green-600"
+                cardClass="border-green-300 bg-green-100"
+                iconClass="bg-green-200 text-green-700"
               />
 
             </div>
 
-            {/* COMPLAINTS */}
+            {/* ================= COMPLAINTS ================= */}
             <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-[0_6px_24px_rgba(90,60,30,0.04)]">
 
               {/* SECTION HEADER */}
               <div className="border-b border-orange-100 p-6">
+
                 <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
 
                   <div>
@@ -357,6 +415,7 @@ export default function OfficerDashboard() {
 
                     {/* SEARCH */}
                     <div className="relative">
+
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                         ⌕
                       </span>
@@ -364,32 +423,59 @@ export default function OfficerDashboard() {
                       <input
                         type="text"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) =>
+                          setSearch(e.target.value)
+                        }
                         placeholder="Search complaint..."
                         className="w-full rounded-xl border border-orange-100 bg-white py-3 pl-10 pr-4 text-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-orange-300 focus:ring-2 focus:ring-orange-100 sm:w-64"
                       />
+
                     </div>
 
                     {/* STATUS */}
                     <select
                       value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
+                      onChange={(e) =>
+                        setStatusFilter(e.target.value)
+                      }
                       className="rounded-xl border border-orange-100 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
                     >
-                      <option value="all">All Status</option>
-                      <option value="assigned">Assigned</option>
-                      <option value="submitted">Submitted</option>
-                      <option value="under review">Under Review</option>
-                      <option value="in progress">In Progress</option>
+                      <option value="all">
+                        All Status
+                      </option>
+
+                      <option value="assigned">
+                        Assigned
+                      </option>
+
+                      <option value="submitted">
+                        Submitted
+                      </option>
+
+                      <option value="under review">
+                        Under Review
+                      </option>
+
+                      <option value="in progress">
+                        In Progress
+                      </option>
+
                       <option value="pending citizen">
                         Pending Citizen
                       </option>
-                      <option value="resolved">Resolved</option>
-                      <option value="closed">Closed</option>
+
+                      <option value="resolved">
+                        Resolved
+                      </option>
+
+                      <option value="closed">
+                        Closed
+                      </option>
                     </select>
 
                   </div>
                 </div>
+
               </div>
 
               {/* ERROR */}
@@ -402,177 +488,213 @@ export default function OfficerDashboard() {
               {/* LOADING */}
               {loading && (
                 <div className="space-y-4 p-6">
+
                   {[1, 2].map((item) => (
                     <div
                       key={item}
                       className="animate-pulse rounded-xl border border-orange-100 p-6"
                     >
                       <div className="h-5 w-24 rounded bg-slate-100" />
+
                       <div className="mt-4 h-5 w-2/3 rounded bg-slate-100" />
+
                       <div className="mt-4 h-4 w-1/2 rounded bg-slate-100" />
                     </div>
                   ))}
+
                 </div>
               )}
 
               {/* EMPTY */}
-              {!loading && filteredComplaints.length === 0 && (
-                <div className="px-6 py-16 text-center">
+              {!loading &&
+                filteredComplaints.length === 0 && (
+                  <div className="px-6 py-16 text-center">
 
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-orange-50 text-xl text-orange-600">
-                    ▣
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-orange-100 text-xl text-orange-700">
+                      ▣
+                    </div>
+
+                    <h3 className="mt-5 text-lg font-bold text-slate-900">
+                      No complaints found
+                    </h3>
+
+                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+                      {complaints.length === 0
+                        ? "There are currently no complaints assigned to your officer account."
+                        : "No complaint matches your current search or status filter."}
+                    </p>
+
+                    {complaints.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="mt-4 text-sm font-semibold text-orange-600 transition hover:text-orange-700"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+
                   </div>
-
-                  <h3 className="mt-5 text-lg font-bold text-slate-900">
-                    No complaints found
-                  </h3>
-
-                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                    {complaints.length === 0
-                      ? "There are currently no complaints assigned to your officer account."
-                      : "No complaint matches your current search or status filter."}
-                  </p>
-
-                  {complaints.length > 0 && (
-                    <button
-                      onClick={clearFilters}
-                      className="mt-4 text-sm font-semibold text-orange-600 transition hover:text-orange-700"
-                    >
-                      Clear filters
-                    </button>
-                  )}
-
-                </div>
-              )}
+                )}
 
               {/* COMPLAINT LIST */}
-              {!loading && filteredComplaints.length > 0 && (
-                <div className="space-y-4 p-5 md:p-6">
+              {!loading &&
+                filteredComplaints.length > 0 && (
+                  <div className="space-y-4 p-5 md:p-6">
 
-                  {filteredComplaints.map((complaint) => {
-                    const status = normalizeStatus(complaint.status);
+                    {filteredComplaints.map((complaint) => {
+                      const status =
+                        normalizeStatus(
+                          complaint.status
+                        );
 
-                    const statusClass =
-                      statusStyles[status] ||
-                      "border-slate-200 bg-slate-50 text-slate-600";
+                      const statusClass =
+                        statusStyles[status] ||
+                        "border-slate-200 bg-slate-50 text-slate-600";
 
-                    return (
-                      <article
-                        key={complaint.id}
-                        className="group relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-5 transition-all duration-200 hover:border-orange-200 hover:shadow-[0_8px_26px_rgba(90,60,30,0.07)] md:p-6"
-                      >
-                        <div className="absolute left-0 top-0 h-full w-1 bg-orange-500" />
+                      return (
+                        <article
+                          key={complaint.id}
+                          className="group relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-5 transition-all duration-200 hover:border-orange-200 hover:shadow-[0_8px_26px_rgba(90,60,30,0.07)] md:p-6"
+                        >
 
-                        <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr_auto] xl:items-center">
+                          <div className="absolute left-0 top-0 h-full w-1 bg-orange-500" />
 
-                          {/* COMPLAINT INFO */}
-                          <div>
-                            <div className="flex flex-wrap items-center gap-3">
+                          <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr_auto] xl:items-center">
 
-                              <span className="text-sm font-bold text-orange-600">
-                                OZO-{complaint.id}
-                              </span>
+                            {/* COMPLAINT INFO */}
+                            <div>
 
-                              <span
-                                className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusClass}`}
-                              >
-                                {formatStatus(complaint.status)}
-                              </span>
+                              <div className="flex flex-wrap items-center gap-3">
 
-                            </div>
-
-                            <h3 className="mt-4 text-lg font-bold leading-7 text-slate-900">
-                              {complaint.description || "-"}
-                            </h3>
-
-                            <div className="mt-5 grid gap-4 sm:grid-cols-3">
-
-                              <div>
-                                <p className="text-xs font-medium text-slate-400">
-                                  Department
-                                </p>
-
-                                <p className="mt-1 text-sm font-semibold text-slate-700">
-                                  #{complaint.department_id ?? "-"}
-                                </p>
-                              </div>
-
-                              <div>
-                                <p className="text-xs font-medium text-slate-400">
-                                  Service
-                                </p>
-
-                                <p className="mt-1 text-sm font-semibold text-slate-700">
-                                  #{complaint.service_id ?? "-"}
-                                </p>
-                              </div>
-
-                              <div>
-                                <p className="text-xs font-medium text-slate-400">
-                                  Created On
-                                </p>
-
-                                <p className="mt-1 text-sm font-semibold text-slate-700">
-                                  {formatDate(complaint.created_at)}
-                                </p>
-                              </div>
-
-                            </div>
-                          </div>
-
-                          {/* EXPECTED RESOLUTION */}
-                          <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-5">
-
-                            <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">
-                              Expected Resolution
-                            </p>
-
-                            <p className="mt-3 text-sm leading-6 text-slate-600">
-                              {complaint.expected_resolution || "-"}
-                            </p>
-
-                            <div className="mt-4 border-t border-orange-100 pt-4">
-                              <div className="flex items-center justify-between">
-
-                                <span className="text-xs text-slate-400">
-                                  Routing Confidence
+                                <span className="text-sm font-bold text-orange-600">
+                                  OZO-{complaint.id}
                                 </span>
 
-                                <span className="text-sm font-bold text-green-600">
-                                  {complaint.routing_confidence != null
-                                    ? `${Math.round(
-                                        complaint.routing_confidence * 100
+                                <span
+                                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusClass}`}
+                                >
+                                  {formatStatus(
+                                    complaint.status
+                                  )}
+                                </span>
+
+                              </div>
+
+                              <h3 className="mt-4 text-lg font-bold leading-7 text-slate-900">
+                                {complaint.description ||
+                                  "-"}
+                              </h3>
+
+                              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+
+                                <div>
+                                  <p className="text-xs font-medium text-slate-400">
+                                    Department
+                                  </p>
+
+                                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                                    #
+                                    {complaint.department_id ??
+                                      "-"}
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="text-xs font-medium text-slate-400">
+                                    Service
+                                  </p>
+
+                                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                                    #
+                                    {complaint.service_id ??
+                                      "-"}
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="text-xs font-medium text-slate-400">
+                                    Created On
+                                  </p>
+
+                                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                                    {formatDate(
+                                      complaint.created_at
+                                    )}
+                                  </p>
+                                </div>
+
+                              </div>
+
+                            </div>
+
+                            {/* EXPECTED RESOLUTION */}
+                            <div className="rounded-xl border border-orange-200 bg-orange-50 p-5">
+
+                              <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
+                                Expected Resolution
+                              </p>
+
+                              <p className="mt-3 text-sm leading-6 text-slate-600">
+                                {complaint.expected_resolution ||
+                                  "-"}
+                              </p>
+
+                              <div className="mt-4 border-t border-orange-200 pt-4">
+
+                                <div className="flex items-center justify-between">
+
+                                  <span className="text-xs text-slate-500">
+                                    Routing Confidence
+                                  </span>
+
+                                  <span className="text-sm font-bold text-green-700">
+                                    {complaint.routing_confidence !=
+                                      null
+                                      ? `${Math.round(
+                                        complaint.routing_confidence *
+                                        100
                                       )}%`
-                                    : "-"}
-                                </span>
+                                      : "-"}
+                                  </span>
+
+                                </div>
 
                               </div>
+
+                            </div>
+
+                            {/* ACTION */}
+                            <div className="xl:pl-2">
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleViewDetails(
+                                    complaint
+                                  )
+                                }
+                                className="w-full rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md xl:w-auto"
+                              >
+                                View Details →
+                              </button>
+
                             </div>
 
                           </div>
 
-                          {/* ACTION */}
-                          <div className="xl:pl-2">
-                            <button
-                              onClick={() => handleViewDetails(complaint)}
-                              className="w-full rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md xl:w-auto"
-                            >
-                              View Details →
-                            </button>
-                          </div>
+                        </article>
+                      );
+                    })}
 
-                        </div>
-                      </article>
-                    );
-                  })}
+                    <div className="pt-2 text-sm text-slate-400">
+                      Showing{" "}
+                      {filteredComplaints.length} of{" "}
+                      {complaints.length} complaints
+                    </div>
 
-                  <div className="pt-2 text-sm text-slate-400">
-                    Showing {filteredComplaints.length} of{" "}
-                    {complaints.length} complaints
                   </div>
-
-                </div>
-              )}
+                )}
 
             </div>
           </section>

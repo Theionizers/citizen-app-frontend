@@ -7,13 +7,18 @@ const normalizeStatus = (status = "") =>
   status.toLowerCase().replaceAll("_", " ").trim();
 
 const formatStatus = (status = "") =>
-  normalizeStatus(status).replace(/\b\w/g, (char) => char.toUpperCase());
+  normalizeStatus(status).replace(/\b\w/g, (char) =>
+    char.toUpperCase()
+  );
 
 const getStatusStyle = (status) => {
   const normalized = normalizeStatus(status);
 
-  if (normalized === "resolved" || normalized === "closed") {
-    return "bg-green-50 text-green-700 border-green-200";
+  if (
+    normalized === "resolved" ||
+    normalized === "closed"
+  ) {
+    return "bg-green-100 text-green-700 border-green-300";
   }
 
   if (
@@ -21,20 +26,23 @@ const getStatusStyle = (status) => {
     normalized === "in progress" ||
     normalized === "processing"
   ) {
-    return "bg-orange-50 text-orange-700 border-orange-200";
+    return "bg-amber-100 text-amber-700 border-amber-300";
   }
 
   if (normalized === "assigned") {
-    return "bg-blue-50 text-blue-700 border-blue-200";
+    return "bg-blue-100 text-blue-700 border-blue-300";
   }
 
-  return "bg-slate-50 text-slate-600 border-slate-200";
+  return "bg-slate-100 text-slate-600 border-slate-300";
 };
 
 const getProgressStep = (status) => {
   const normalized = normalizeStatus(status);
 
-  if (normalized === "resolved" || normalized === "closed") {
+  if (
+    normalized === "resolved" ||
+    normalized === "closed"
+  ) {
     return 4;
   }
 
@@ -42,7 +50,10 @@ const getProgressStep = (status) => {
     return 3;
   }
 
-  if (normalized === "under review" || normalized === "processing") {
+  if (
+    normalized === "under review" ||
+    normalized === "processing"
+  ) {
     return 2;
   }
 
@@ -90,6 +101,7 @@ const MyComplaints = () => {
         setComplaints(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load complaints:", err);
+
         setError(
           err.message || "Unable to load your complaints."
         );
@@ -159,6 +171,7 @@ const MyComplaints = () => {
           {/* ================= HEADER ================= */}
           <div className="mb-8">
             <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+
               <div>
                 <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-orange-600">
                   Citizen Services
@@ -181,66 +194,111 @@ const MyComplaints = () => {
               >
                 + New Complaint
               </button>
+
             </div>
           </div>
 
           {/* ================= SUMMARY ================= */}
           <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-            <div className="group rounded-2xl border border-orange-100 bg-white p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
-              <p className="text-sm font-medium text-slate-500">
-                Total Requests
-              </p>
+            {/* TOTAL */}
+            <div className="group rounded-2xl border border-orange-300 bg-orange-100 p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-400 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
 
-              <p className="mt-2 text-3xl font-bold text-slate-900">
-                {summary.total}
-              </p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-orange-800">
+                    Total Requests
+                  </p>
 
-              <p className="mt-1 text-xs text-slate-400">
-                All submitted requests
-              </p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {summary.total}
+                  </p>
+
+                  <p className="mt-1 text-xs text-orange-700">
+                    All submitted requests
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-200 text-orange-700">
+                  <span className="text-lg">▣</span>
+                </div>
+              </div>
+
             </div>
 
-            <div className="group rounded-2xl border border-orange-100 bg-white p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
-              <p className="text-sm font-medium text-slate-500">
-                Submitted
-              </p>
+            {/* SUBMITTED */}
+            <div className="group rounded-2xl border border-blue-300 bg-blue-100 p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
 
-              <p className="mt-2 text-3xl font-bold text-blue-600">
-                {summary.submitted}
-              </p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-800">
+                    Submitted
+                  </p>
 
-              <p className="mt-1 text-xs text-slate-400">
-                New or assigned requests
-              </p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {summary.submitted}
+                  </p>
+
+                  <p className="mt-1 text-xs text-blue-700">
+                    New or assigned requests
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-200 text-blue-700">
+                  <span className="text-lg">◷</span>
+                </div>
+              </div>
+
             </div>
 
-            <div className="group rounded-2xl border border-orange-100 bg-white p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
-              <p className="text-sm font-medium text-slate-500">
-                In Progress
-              </p>
+            {/* IN PROGRESS */}
+            <div className="group rounded-2xl border border-amber-300 bg-amber-100 p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-400 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
 
-              <p className="mt-2 text-3xl font-bold text-orange-600">
-                {summary.inProgress}
-              </p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-amber-800">
+                    In Progress
+                  </p>
 
-              <p className="mt-1 text-xs text-slate-400">
-                Under review or being handled
-              </p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {summary.inProgress}
+                  </p>
+
+                  <p className="mt-1 text-xs text-amber-700">
+                    Under review or being handled
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-200 text-amber-700">
+                  <span className="text-lg">↻</span>
+                </div>
+              </div>
+
             </div>
 
-            <div className="group rounded-2xl border border-orange-100 bg-white p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
-              <p className="text-sm font-medium text-slate-500">
-                Resolved
-              </p>
+            {/* RESOLVED */}
+            <div className="group rounded-2xl border border-green-300 bg-green-100 p-5 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-green-400 hover:shadow-[0_10px_28px_rgba(90,60,30,0.08)]">
 
-              <p className="mt-2 text-3xl font-bold text-green-600">
-                {summary.resolved}
-              </p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-800">
+                    Resolved
+                  </p>
 
-              <p className="mt-1 text-xs text-slate-400">
-                Completed requests
-              </p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {summary.resolved}
+                  </p>
+
+                  <p className="mt-1 text-xs text-green-700">
+                    Completed requests
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-200 text-green-700">
+                  <span className="text-lg">✓</span>
+                </div>
+              </div>
+
             </div>
 
           </div>
@@ -248,17 +306,20 @@ const MyComplaints = () => {
           {/* ================= LOADING ================= */}
           {loading && (
             <div className="rounded-2xl border border-orange-100 bg-white p-12 text-center shadow-sm">
+
               <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-orange-100 border-t-orange-600" />
 
               <p className="mt-4 text-sm text-slate-500">
                 Loading your requests...
               </p>
+
             </div>
           )}
 
           {/* ================= ERROR ================= */}
           {!loading && error && (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+
               <h2 className="font-semibold text-red-700">
                 Unable to load your requests
               </h2>
@@ -274,6 +335,7 @@ const MyComplaints = () => {
               >
                 Try Again
               </button>
+
             </div>
           )}
 
@@ -282,7 +344,8 @@ const MyComplaints = () => {
             !error &&
             complaints.length === 0 && (
               <div className="rounded-2xl border border-orange-100 bg-white p-12 text-center shadow-sm">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-orange-50 text-xl text-orange-600">
+
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-orange-100 text-xl text-orange-700">
                   ▣
                 </div>
 
@@ -296,11 +359,14 @@ const MyComplaints = () => {
 
                 <button
                   type="button"
-                  onClick={() => navigate("/submit-complaint")}
+                  onClick={() =>
+                    navigate("/submit-complaint")
+                  }
                   className="mt-6 rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-orange-700"
                 >
                   Submit Your First Complaint
                 </button>
+
               </div>
             )}
 
@@ -311,18 +377,22 @@ const MyComplaints = () => {
               <div className="space-y-5">
 
                 {complaints.map((complaint) => {
-                  const progressStep = getProgressStep(
-                    complaint.status
-                  );
+                  const progressStep =
+                    getProgressStep(
+                      complaint.status
+                    );
 
                   return (
                     <article
                       key={complaint.id}
-                      className="group rounded-2xl border border-orange-100 bg-white p-6 shadow-[0_6px_24px_rgba(90,60,30,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_10px_30px_rgba(90,60,30,0.07)] sm:p-7"
+                      className="group rounded-2xl border border-orange-200 bg-white p-6 shadow-[0_6px_24px_rgba(90,60,30,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-[0_10px_30px_rgba(90,60,30,0.08)] sm:p-7"
                     >
+
                       {/* HEADER */}
                       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+
                         <div>
+
                           <div className="mb-2 flex flex-wrap items-center gap-3">
 
                             <span className="text-xs font-bold text-orange-600">
@@ -334,33 +404,41 @@ const MyComplaints = () => {
                                 complaint.status
                               )}`}
                             >
-                              {formatStatus(complaint.status)}
+                              {formatStatus(
+                                complaint.status
+                              )}
                             </span>
 
                           </div>
 
                           <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
                             {complaint.description
-                              ? complaint.description.length > 90
+                              ? complaint.description.length >
+                                90
                                 ? `${complaint.description.slice(
-                                    0,
-                                    90
-                                  )}...`
+                                  0,
+                                  90
+                                )}...`
                                 : complaint.description
                               : "Complaint"}
                           </h2>
+
                         </div>
 
                         <p className="text-sm text-slate-500">
-                          {formatDate(complaint.created_at)}
+                          {formatDate(
+                            complaint.created_at
+                          )}
                         </p>
+
                       </div>
 
                       {/* DETAILS */}
                       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-                        <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
-                          <p className="mb-1 text-xs text-slate-500">
+                        <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
+
+                          <p className="mb-1 text-xs font-medium text-orange-700">
                             Department
                           </p>
 
@@ -369,10 +447,12 @@ const MyComplaints = () => {
                               ? `Department #${complaint.department_id}`
                               : "Not assigned"}
                           </p>
+
                         </div>
 
-                        <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
-                          <p className="mb-1 text-xs text-slate-500">
+                        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+
+                          <p className="mb-1 text-xs font-medium text-blue-700">
                             Service
                           </p>
 
@@ -381,16 +461,21 @@ const MyComplaints = () => {
                               ? `Service #${complaint.service_id}`
                               : "Not assigned"}
                           </p>
+
                         </div>
 
-                        <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
-                          <p className="mb-1 text-xs text-slate-500">
+                        <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+
+                          <p className="mb-1 text-xs font-medium text-green-700">
                             Last Updated
                           </p>
 
                           <p className="text-sm font-semibold text-slate-800">
-                            {formatDate(complaint.updated_at)}
+                            {formatDate(
+                              complaint.updated_at
+                            )}
                           </p>
+
                         </div>
 
                       </div>
@@ -398,66 +483,59 @@ const MyComplaints = () => {
                       {/* PROGRESS */}
                       <div className="mt-7">
 
-                        <p className="mb-3 text-xs font-semibold text-slate-500">
-                          REQUEST PROGRESS
+                        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Request Progress
                         </p>
 
                         <div className="flex items-center">
 
                           <div
-                            className={`h-3 w-3 shrink-0 rounded-full ${
-                              progressStep >= 1
+                            className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 1
                                 ? "bg-orange-500"
                                 : "bg-slate-300"
-                            }`}
+                              }`}
                           />
 
                           <div
-                            className={`h-1 flex-1 ${
-                              progressStep >= 2
+                            className={`h-1 flex-1 ${progressStep >= 2
                                 ? "bg-orange-500"
                                 : "bg-slate-200"
-                            }`}
+                              }`}
                           />
 
                           <div
-                            className={`h-3 w-3 shrink-0 rounded-full ${
-                              progressStep >= 2
-                                ? "bg-orange-500"
+                            className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 2
+                                ? "bg-amber-500"
                                 : "bg-slate-300"
-                            }`}
+                              }`}
                           />
 
                           <div
-                            className={`h-1 flex-1 ${
-                              progressStep >= 3
-                                ? "bg-orange-500"
+                            className={`h-1 flex-1 ${progressStep >= 3
+                                ? "bg-amber-500"
                                 : "bg-slate-200"
-                            }`}
+                              }`}
                           />
 
                           <div
-                            className={`h-3 w-3 shrink-0 rounded-full ${
-                              progressStep >= 3
-                                ? "bg-orange-500"
+                            className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 3
+                                ? "bg-amber-500"
                                 : "bg-slate-300"
-                            }`}
+                              }`}
                           />
 
                           <div
-                            className={`h-1 flex-1 ${
-                              progressStep >= 4
+                            className={`h-1 flex-1 ${progressStep >= 4
                                 ? "bg-green-500"
                                 : "bg-slate-200"
-                            }`}
+                              }`}
                           />
 
                           <div
-                            className={`h-3 w-3 shrink-0 rounded-full ${
-                              progressStep >= 4
+                            className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 4
                                 ? "bg-green-500"
                                 : "bg-slate-300"
-                            }`}
+                              }`}
                           />
 
                         </div>
@@ -477,14 +555,17 @@ const MyComplaints = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            handleViewDetails(complaint)
+                            handleViewDetails(
+                              complaint
+                            )
                           }
-                          className="text-sm font-semibold text-orange-600 transition-all duration-200 hover:translate-x-0.5 hover:text-orange-700"
+                          className="rounded-lg border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition-all duration-200 hover:bg-orange-50 hover:text-orange-700"
                         >
                           View Details →
                         </button>
 
                       </div>
+
                     </article>
                   );
                 })}
