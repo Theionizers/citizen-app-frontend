@@ -1,22 +1,25 @@
-import OfficerDashboard from "./pages/OfficerDashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
-import SubmitComplaint from "./pages/SubmitComplaint";
-import MyComplaints from "./pages/MyComplaints";
-import ComplaintDetails from "./pages/ComplaintDetails";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
-import Home from "./pages/Home";
 
+import Home from "./pages/Home";
+import SubmitComplaint from "./pages/SubmitComplaint";
+import MyComplaints from "./pages/MyComplaints";
+import ComplaintDetails from "./pages/ComplaintDetails";
+
+import OfficerDashboard from "./pages/OfficerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-
+        {/* HOME */}
         <Route
           path="/"
           element={
@@ -26,6 +29,7 @@ function App() {
           }
         />
 
+        {/* AUTH */}
         <Route path="/login" element={<Login />} />
 
         <Route path="/register" element={<Register />} />
@@ -34,6 +38,8 @@ function App() {
           path="/forgot-password"
           element={<ForgotPassword />}
         />
+
+        {/* CITIZEN */}
         <Route
           path="/submit-complaint"
           element={<SubmitComplaint />}
@@ -43,13 +49,22 @@ function App() {
           path="/my-complaints"
           element={<MyComplaints />}
         />
+
         <Route
           path="/complaint/:id"
           element={<ComplaintDetails />}
         />
+
+        {/* OFFICER */}
         <Route
           path="/officer-dashboard"
           element={<OfficerDashboard />}
+        />
+
+        {/* ADMIN */}
+        <Route
+          path="/admin-dashboard"
+          element={<AdminDashboard />}
         />
 
       </Routes>

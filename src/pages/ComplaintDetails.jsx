@@ -16,13 +16,10 @@ const API_BASE_URL =
 const normalizeStatus = (status = "") =>
   status.toLowerCase().replaceAll("_", " ").trim();
 
-const formatStatus = (status) => {
-  if (!status) return "Submitted";
-
-  return status
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-};
+const formatStatus = (status = "") =>
+  normalizeStatus(status).replace(/\b\w/g, (char) =>
+    char.toUpperCase()
+  );
 
 const formatDate = (date) => {
   if (!date) return "—";
@@ -43,7 +40,7 @@ const formatDate = (date) => {
 const getProgressStep = (status) => {
   const normalized = normalizeStatus(status);
 
-  if (normalized === "resolved") {
+  if (normalized === "resolved" || normalized === "closed") {
     return 3;
   }
 
@@ -61,7 +58,7 @@ const getProgressStep = (status) => {
 const getStatusStyle = (status) => {
   const normalized = normalizeStatus(status);
 
-  if (normalized === "resolved") {
+  if (normalized === "resolved" || normalized === "closed") {
     return "bg-green-50 text-green-700 border-green-200";
   }
 
@@ -73,7 +70,11 @@ const getStatusStyle = (status) => {
     return "bg-orange-50 text-orange-700 border-orange-200";
   }
 
-  return "bg-blue-50 text-blue-700 border-blue-200";
+  if (normalized === "assigned") {
+    return "bg-blue-50 text-blue-700 border-blue-200";
+  }
+
+  return "bg-slate-50 text-slate-600 border-slate-200";
 };
 
 export default function ComplaintDetails() {
@@ -81,10 +82,11 @@ export default function ComplaintDetails() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Complaint passed from Officer Dashboard
   const passedComplaint = location.state?.complaint;
   const fromOfficerDashboard =
     location.state?.fromOfficerDashboard === true;
+  const fromCitizenRequests =
+    location.state?.fromCitizenRequests === true;
 
   const [complaint, setComplaint] = useState(
     passedComplaint || null
@@ -103,9 +105,7 @@ export default function ComplaintDetails() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState("");
 
-  /*
-    Get current logged-in user's role.
-  */
+  // Get current user
   useEffect(() => {
     const token = localStorage.getItem("access_token");
 
@@ -128,41 +128,29 @@ export default function ComplaintDetails() {
         );
 
         if (!response.ok) {
-          setError("Unable to verify user.");
-          setLoading(false);
-          return;
+          throw new Error("Unable to verify user.");
         }
 
         const data = await response.json();
+
         setUserRole(data.role);
       } catch (err) {
         console.error("Failed to fetch current user:", err);
-        setError("Unable to verify user.");
+        setError(err.message || "Unable to verify user.");
+        setLoading(false);
       }
     };
 
     loadUser();
   }, []);
 
-  /*
-    Load complaint.
-
-    Officer:
-    Use complaint already fetched by
-    GET /complaints/officer/assigned.
-
-    Citizen:
-    Use existing GET /complaints/{id}.
-  */
+  // Load complaint
   useEffect(() => {
     const loadComplaint = async () => {
       try {
         setError("");
 
-        /*
-          If Officer Dashboard already passed the complaint,
-          there is no need to call /complaints/{id}.
-        */
+        // Complaint already passed from Officer Dashboard
         if (fromOfficerDashboard && passedComplaint) {
           setComplaint(passedComplaint);
           setSelectedStatus(passedComplaint.status || "");
@@ -170,10 +158,15 @@ export default function ComplaintDetails() {
           return;
         }
 
-        /*
-          For direct officer access/refresh:
-          fetch assigned complaints and find the requested one.
-        */
+        // Complaint already passed from Citizen My Requests
+        if (fromCitizenRequests && passedComplaint) {
+          setComplaint(passedComplaint);
+          setSelectedStatus(passedComplaint.status || "");
+          setLoading(false);
+          return;
+        }
+
+        // Officer opens details directly or refreshes page
         if (userRole === "officer") {
           const assignedComplaints =
             await officerApi.getAssignedComplaints();
@@ -194,9 +187,7 @@ export default function ComplaintDetails() {
           return;
         }
 
-        /*
-          Citizen flow.
-        */
+        // Citizen opens details directly or refreshes page
         if (userRole === "citizen") {
           const data = await complaintApi.getById(id);
 
@@ -206,9 +197,6 @@ export default function ComplaintDetails() {
           return;
         }
 
-        /*
-          Wait until role is available.
-        */
       } catch (err) {
         console.error("Failed to load complaint:", err);
         setError(
@@ -218,20 +206,17 @@ export default function ComplaintDetails() {
       }
     };
 
-    /*
-      If complaint was passed from dashboard,
-      no API call is required.
-    */
-    if (fromOfficerDashboard && passedComplaint) {
+    // Don't make unnecessary API call if complaint is already passed
+    if (
+      (fromOfficerDashboard || fromCitizenRequests) &&
+      passedComplaint
+    ) {
       setComplaint(passedComplaint);
       setSelectedStatus(passedComplaint.status || "");
       setLoading(false);
       return;
     }
 
-    /*
-      Wait for user role before deciding which API to use.
-    */
     if (userRole) {
       loadComplaint();
     }
@@ -240,11 +225,10 @@ export default function ComplaintDetails() {
     userRole,
     passedComplaint,
     fromOfficerDashboard,
+    fromCitizenRequests,
   ]);
 
-  /*
-    Update complaint status.
-  */
+  // Update status
   const handleStatusUpdate = async () => {
     if (!complaint || !selectedStatus) {
       return;
@@ -292,16 +276,14 @@ export default function ComplaintDetails() {
 
       setStatusError(
         err.message ||
-          "Failed to update complaint status."
+        "Failed to update complaint status."
       );
     } finally {
       setUpdatingStatus(false);
     }
   };
 
-  /*
-    Loading
-  */
+  // Loading
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FFF8F1]">
@@ -320,9 +302,7 @@ export default function ComplaintDetails() {
     );
   }
 
-  /*
-    Error
-  */
+  // Error
   if (error || !complaint) {
     return (
       <div className="min-h-screen bg-[#FFF8F1]">
@@ -396,10 +376,10 @@ export default function ComplaintDetails() {
 
           {/* Header */}
           <div className="mb-8">
-            <p className="mb-2 text-sm font-semibold text-orange-600">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-orange-600">
               {userRole === "officer"
-                ? "OFFICER PORTAL"
-                : "CITIZEN SERVICES"}
+                ? "Officer Portal"
+                : "Citizen Services"}
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -441,10 +421,10 @@ export default function ComplaintDetails() {
           {/* Main Card */}
           <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-[0_6px_24px_rgba(90,60,30,0.04)] sm:p-8">
 
-            {/* Complaint */}
+            {/* Complaint Description */}
             <div>
-              <p className="mb-2 text-xs font-semibold text-slate-500">
-                COMPLAINT
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Complaint
               </p>
 
               <p className="text-base leading-7 text-slate-800 sm:text-lg">
@@ -453,7 +433,7 @@ export default function ComplaintDetails() {
               </p>
             </div>
 
-            {/* Information */}
+            {/* Complaint Information */}
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
 
               {/* Department */}
@@ -503,8 +483,8 @@ export default function ComplaintDetails() {
                 <p className="text-sm font-semibold text-slate-800">
                   {complaint.routing_confidence != null
                     ? `${Math.round(
-                        complaint.routing_confidence * 100
-                      )}%`
+                      complaint.routing_confidence * 100
+                    )}%`
                     : "—"}
                 </p>
               </div>
@@ -526,13 +506,14 @@ export default function ComplaintDetails() {
 
             {/* Location */}
             <div className="mt-6">
-              <p className="mb-3 text-xs font-semibold text-slate-500">
-                LOCATION
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Location
               </p>
 
               <div className="rounded-xl border border-orange-100 bg-[#FFF8F1] p-4">
+
                 {complaint.latitude != null &&
-                complaint.longitude != null ? (
+                  complaint.longitude != null ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
                     <div>
@@ -561,6 +542,7 @@ export default function ComplaintDetails() {
                     Location was not provided with this complaint.
                   </p>
                 )}
+
               </div>
             </div>
 
@@ -569,8 +551,8 @@ export default function ComplaintDetails() {
               <div className="mt-8 rounded-xl border border-orange-100 bg-white">
 
                 <div className="border-b border-orange-100 px-5 py-4">
-                  <p className="text-xs font-semibold text-slate-500">
-                    UPDATE STATUS
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Update Status
                   </p>
 
                   <h2 className="mt-1 text-lg font-bold text-slate-900">
@@ -579,6 +561,7 @@ export default function ComplaintDetails() {
                 </div>
 
                 <div className="p-5">
+
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 
                     <select
@@ -627,57 +610,53 @@ export default function ComplaintDetails() {
                       {statusError}
                     </p>
                   )}
-                </div>
 
+                </div>
               </div>
             )}
 
             {/* Progress */}
             <div className="mt-8">
-              <p className="mb-3 text-xs font-semibold text-slate-500">
-                REQUEST PROGRESS
+
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Request Progress
               </p>
 
               <div className="flex items-center">
 
                 <div
-                  className={`h-3 w-3 shrink-0 rounded-full ${
-                    progressStep >= 1
+                  className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 1
                       ? "bg-orange-500"
                       : "bg-slate-300"
-                  }`}
+                    }`}
                 />
 
                 <div
-                  className={`h-1 flex-1 ${
-                    progressStep >= 2
+                  className={`h-1 flex-1 ${progressStep >= 2
                       ? "bg-orange-500"
                       : "bg-slate-200"
-                  }`}
+                    }`}
                 />
 
                 <div
-                  className={`h-3 w-3 shrink-0 rounded-full ${
-                    progressStep >= 2
+                  className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 2
                       ? "bg-orange-500"
                       : "bg-slate-300"
-                  }`}
+                    }`}
                 />
 
                 <div
-                  className={`h-1 flex-1 ${
-                    progressStep >= 3
+                  className={`h-1 flex-1 ${progressStep >= 3
                       ? "bg-green-500"
                       : "bg-slate-200"
-                  }`}
+                    }`}
                 />
 
                 <div
-                  className={`h-3 w-3 shrink-0 rounded-full ${
-                    progressStep >= 3
+                  className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 3
                       ? "bg-green-500"
                       : "bg-slate-300"
-                  }`}
+                    }`}
                 />
 
               </div>
@@ -687,10 +666,12 @@ export default function ComplaintDetails() {
                 <span>Under Review / In Progress</span>
                 <span>Resolved</span>
               </div>
+
             </div>
 
             {/* Last Updated */}
             <div className="mt-8 border-t border-orange-100 pt-5">
+
               <p className="text-xs text-slate-500">
                 Last updated
               </p>
@@ -698,6 +679,7 @@ export default function ComplaintDetails() {
               <p className="mt-1 text-sm font-semibold text-slate-800">
                 {formatDate(complaint.updated_at)}
               </p>
+
             </div>
 
           </div>
