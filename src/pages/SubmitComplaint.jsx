@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
@@ -10,18 +10,263 @@ const SubmitComplaint = () => {
   const navigate = useNavigate();
 
   const [description, setDescription] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
 
+  // ================= VOICE =================
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
+  const mediaRecorderRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  // ================= LOCATION =================
   const [locationAdded, setLocationAdded] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [locationError, setLocationError] = useState("");
 
+  // ================= SUBMIT =================
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // =========================================================
+  // START RECORDING
+  // =========================================================
+  const startRecording = async () => {
+    try {
+      setError("");
+      setSuccess("");
+      setLocationError("");
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setError(
+          "Audio recording is not supported by this browser."
+        );
+        return;
+      }
+
+      const stream =
+        await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+      mediaStreamRef.current = stream;
+
+      audioChunksRef.current = [];
+
+      let options = {};
+
+      if (
+        typeof MediaRecorder !== "undefined" &&
+        MediaRecorder.isTypeSupported(
+          "audio/webm;codecs=opus"
+        )
+      ) {
+        options = {
+          mimeType: "audio/webm;codecs=opus",
+        };
+      } else if (
+        typeof MediaRecorder !== "undefined" &&
+        MediaRecorder.isTypeSupported("audio/webm")
+      ) {
+        options = {
+          mimeType: "audio/webm",
+        };
+      }
+
+      const recorder = new MediaRecorder(
+        stream,
+        options
+      );
+
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const mimeType =
+          recorder.mimeType || "audio/webm";
+
+        const audioBlob = new Blob(
+          audioChunksRef.current,
+          {
+            type: mimeType,
+          }
+        );
+
+        stream.getTracks().forEach((track) => {
+          track.stop();
+        });
+
+        mediaStreamRef.current = null;
+
+        await transcribeAudio(audioBlob);
+      };
+
+      recorder.start();
+
+      setIsRecording(true);
+    } catch (err) {
+      console.error(
+        "Failed to start recording:",
+        err
+      );
+
+      if (err?.name === "NotAllowedError") {
+        setError(
+          "Microphone permission was denied. Please allow microphone access."
+        );
+      } else if (err?.name === "NotFoundError") {
+        setError(
+          "No microphone was found on this device."
+        );
+      } else {
+        setError(
+          "Unable to start recording. Please try again."
+        );
+      }
+
+      setIsRecording(false);
+    }
+  };
+
+  // =========================================================
+  // STOP RECORDING
+  // =========================================================
+  const stopRecording = () => {
+    const recorder = mediaRecorderRef.current;
+
+    if (!recorder) {
+      return;
+    }
+
+    if (recorder.state !== "inactive") {
+      recorder.stop();
+    }
+
+    setIsRecording(false);
+    setIsTranscribing(true);
+  };
+
+  // =========================================================
+  // TRANSCRIBE AUDIO
+  // =========================================================
+  const transcribeAudio = async (audioBlob) => {
+    try {
+      setError("");
+      setSuccess("");
+
+      const token =
+        localStorage.getItem("access_token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const extension =
+        audioBlob.type.includes("webm")
+          ? "webm"
+          : "wav";
+
+      const audioFile = new File(
+        [audioBlob],
+        `complaint-audio.${extension}`,
+        {
+          type: audioBlob.type || "audio/webm",
+        }
+      );
+
+      const formData = new FormData();
+
+      formData.append("audio", audioFile);
+
+      const response = await fetch(
+        `${API_BASE_URL}/complaints/transcribe`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json().catch(
+        () => null
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+            "Failed to transcribe audio."
+        );
+      }
+
+      /*
+        The backend response may be:
+        - a plain string
+        - an object containing transcript/text
+      */
+
+      let transcript = "";
+
+      if (typeof data === "string") {
+        transcript = data;
+      } else if (data?.text) {
+        transcript = data.text;
+      } else if (data?.transcript) {
+        transcript = data.transcript;
+      } else if (data?.transcription) {
+        transcript = data.transcription;
+      } else if (data?.detail) {
+        transcript = data.detail;
+      }
+
+      transcript = String(transcript || "").trim();
+
+      if (!transcript) {
+        throw new Error(
+          "No text was returned from the transcription service."
+        );
+      }
+
+      setDescription((previous) => {
+        if (!previous.trim()) {
+          return transcript;
+        }
+
+        return `${previous.trim()} ${transcript}`;
+      });
+
+      setSuccess(
+        "Voice converted to text successfully."
+      );
+    } catch (err) {
+      console.error(
+        "Transcription error:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Unable to convert your voice to text."
+      );
+    } finally {
+      setIsTranscribing(false);
+      audioChunksRef.current = [];
+    }
+  };
+
+  // =========================================================
+  // LOCATION
+  // =========================================================
   const handleAddLocation = () => {
     setLocationError("");
     setError("");
@@ -37,8 +282,11 @@ const SubmitComplaint = () => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const currentLatitude = position.coords.latitude;
-        const currentLongitude = position.coords.longitude;
+        const currentLatitude =
+          position.coords.latitude;
+
+        const currentLongitude =
+          position.coords.longitude;
 
         setLatitude(currentLatitude);
         setLongitude(currentLongitude);
@@ -47,7 +295,10 @@ const SubmitComplaint = () => {
         setLocationError("");
       },
       (geoError) => {
-        console.error("Location error:", geoError);
+        console.error(
+          "Location error:",
+          geoError
+        );
 
         setLocationLoading(false);
         setLocationAdded(false);
@@ -85,8 +336,12 @@ const SubmitComplaint = () => {
     setLocationError("");
   };
 
+  // =========================================================
+  // SUBMIT COMPLAINT
+  // =========================================================
   const handleSubmit = async () => {
-    const trimmedDescription = description.trim();
+    const trimmedDescription =
+      description.trim();
 
     if (!trimmedDescription) {
       setError(
@@ -102,7 +357,8 @@ const SubmitComplaint = () => {
       return;
     }
 
-    const token = localStorage.getItem("access_token");
+    const token =
+      localStorage.getItem("access_token");
 
     if (!token) {
       navigate("/login");
@@ -137,7 +393,7 @@ const SubmitComplaint = () => {
       if (!response.ok) {
         throw new Error(
           data?.detail ||
-          "Failed to submit complaint."
+            "Failed to submit complaint."
         );
       }
 
@@ -156,7 +412,7 @@ const SubmitComplaint = () => {
 
       setError(
         err.message ||
-        "Something went wrong while submitting your complaint."
+          "Something went wrong while submitting your complaint."
       );
     } finally {
       setIsSubmitting(false);
@@ -208,8 +464,8 @@ const SubmitComplaint = () => {
                   </h2>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    You can describe your issue by typing or using
-                    your voice.
+                    You can describe your issue by typing or
+                    using your voice.
                   </p>
                 </div>
 
@@ -281,10 +537,13 @@ const SubmitComplaint = () => {
                 </div>
 
                 <div
-                  className={`rounded-2xl border p-5 transition-all duration-200 ${isRecording
+                  className={`rounded-2xl border p-5 transition-all duration-200 ${
+                    isRecording
                       ? "border-orange-400 bg-orange-50"
+                      : isTranscribing
+                      ? "border-blue-300 bg-blue-50"
                       : "border-orange-200 bg-orange-50/40"
-                    }`}
+                  }`}
                 >
 
                   <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -292,26 +551,39 @@ const SubmitComplaint = () => {
                     <div className="flex items-center gap-4">
 
                       <div
-                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition ${isRecording
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition ${
+                          isRecording
                             ? "bg-orange-600 text-white shadow-md shadow-orange-900/20"
+                            : isTranscribing
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-900/20"
                             : "border border-orange-100 bg-white text-orange-600"
-                          }`}
+                        }`}
                       >
-                        <span className="text-xl">🎤</span>
+                        <span className="text-xl">
+                          🎤
+                        </span>
                       </div>
 
                       <div>
 
                         <p className="text-sm font-semibold text-slate-800">
+
                           {isRecording
                             ? "Listening..."
+                            : isTranscribing
+                            ? "Converting voice to text..."
                             : "Tell us your problem"}
+
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
+
                           {isRecording
                             ? "Speak clearly and tap stop when finished."
-                            : "Voice submission will be connected when the backend voice API is available."}
+                            : isTranscribing
+                            ? "Please wait while your voice is being transcribed."
+                            : "Your voice will be converted into text and placed in the complaint description."}
+
                         </p>
 
                       </div>
@@ -320,19 +592,27 @@ const SubmitComplaint = () => {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setIsRecording(
-                          !isRecording
-                        )
+                      onClick={
+                        isRecording
+                          ? stopRecording
+                          : startRecording
                       }
-                      className={`w-full rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 sm:w-auto ${isRecording
+                      disabled={isTranscribing}
+                      className={`w-full rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 sm:w-auto ${
+                        isRecording
                           ? "bg-slate-800 text-white hover:bg-slate-900"
+                          : isTranscribing
+                          ? "cursor-not-allowed bg-blue-400 text-white"
                           : "bg-orange-600 text-white shadow-md shadow-orange-900/20 hover:-translate-y-0.5 hover:bg-orange-700"
-                        }`}
+                      }`}
                     >
+
                       {isRecording
                         ? "Stop Recording"
+                        : isTranscribing
+                        ? "Transcribing..."
                         : "Start Recording"}
+
                     </button>
 
                   </div>
@@ -349,6 +629,22 @@ const SubmitComplaint = () => {
                       <span className="ml-2 text-xs font-medium text-orange-700">
                         Recording in progress
                       </span>
+
+                    </div>
+                  )}
+
+                  {isTranscribing && (
+                    <div className="mt-5 border-t border-blue-200 pt-4">
+
+                      <div className="flex items-center gap-2">
+
+                        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-blue-600" />
+
+                        <span className="text-xs font-medium text-blue-700">
+                          Sending audio to transcription service...
+                        </span>
+
+                      </div>
 
                     </div>
                   )}
@@ -380,12 +676,13 @@ const SubmitComplaint = () => {
                       : handleAddLocation
                   }
                   disabled={locationLoading}
-                  className={`w-full rounded-2xl border p-4 text-left transition-all duration-200 ${locationAdded
+                  className={`w-full rounded-2xl border p-4 text-left transition-all duration-200 ${
+                    locationAdded
                       ? "border-green-300 bg-green-50"
                       : locationError
-                        ? "border-red-200 bg-red-50"
-                        : "border-orange-200 bg-orange-50/40 hover:border-orange-300 hover:bg-orange-50"
-                    } disabled:cursor-not-allowed disabled:opacity-70`}
+                      ? "border-red-200 bg-red-50"
+                      : "border-orange-200 bg-orange-50/40 hover:border-orange-300 hover:bg-orange-50"
+                  } disabled:cursor-not-allowed disabled:opacity-70`}
                 >
 
                   <div className="flex items-center justify-between gap-4">
@@ -393,10 +690,11 @@ const SubmitComplaint = () => {
                     <div className="flex min-w-0 items-center gap-3">
 
                       <div
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${locationAdded
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+                          locationAdded
                             ? "border-green-200 bg-white text-green-600"
                             : "border-orange-100 bg-white text-orange-600"
-                          }`}
+                        }`}
                       >
                         <span className="text-lg">
                           📍
@@ -409,8 +707,8 @@ const SubmitComplaint = () => {
                           {locationLoading
                             ? "Getting your location..."
                             : locationAdded
-                              ? "Location added"
-                              : "Add your location"}
+                            ? "Location added"
+                            : "Add your location"}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
@@ -418,8 +716,8 @@ const SubmitComplaint = () => {
                           {locationLoading
                             ? "Please allow location access if your browser asks."
                             : locationAdded
-                              ? "Your coordinates will be attached to this complaint."
-                              : "Helps us identify the location of the reported problem."}
+                            ? "Your coordinates will be attached to this complaint."
+                            : "Helps us identify the location of the reported problem."}
 
                         </p>
 
@@ -428,16 +726,17 @@ const SubmitComplaint = () => {
                     </div>
 
                     <span
-                      className={`shrink-0 text-sm font-semibold ${locationAdded
+                      className={`shrink-0 text-sm font-semibold ${
+                        locationAdded
                           ? "text-green-600"
                           : "text-orange-600"
-                        }`}
+                      }`}
                     >
                       {locationLoading
                         ? "..."
                         : locationAdded
-                          ? "Added ✓"
-                          : "Add"}
+                        ? "Added ✓"
+                        : "Add"}
                     </span>
 
                   </div>
@@ -472,9 +771,11 @@ const SubmitComplaint = () => {
 
                 {locationError && (
                   <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+
                     <p className="text-sm text-red-600">
                       {locationError}
                     </p>
+
                   </div>
                 )}
 
@@ -521,11 +822,18 @@ const SubmitComplaint = () => {
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className={`w-full rounded-xl px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 sm:w-auto ${isSubmitting
+                    disabled={
+                      isSubmitting ||
+                      isRecording ||
+                      isTranscribing
+                    }
+                    className={`w-full rounded-xl px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 sm:w-auto ${
+                      isSubmitting ||
+                      isRecording ||
+                      isTranscribing
                         ? "cursor-not-allowed bg-orange-400"
                         : "bg-orange-600 shadow-orange-900/20 hover:-translate-y-0.5 hover:bg-orange-700"
-                      }`}
+                    }`}
                   >
                     {isSubmitting
                       ? "Submitting..."
@@ -539,7 +847,7 @@ const SubmitComplaint = () => {
             </div>
           </div>
 
-          {/* ================= TRUST NOTE ================= */}
+          {/* TRUST NOTE */}
           <div className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-500">
             <span className="text-green-600">✓</span>
             Your complaint details will be handled securely.
