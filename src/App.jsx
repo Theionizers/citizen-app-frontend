@@ -12,9 +12,10 @@ import MyComplaints from "./pages/MyComplaints";
 import ComplaintDetails from "./pages/ComplaintDetails";
 
 import OfficerDashboard from "./pages/OfficerDashboard";
+import OfficerWelcome from "./pages/OfficerWelcome";
+
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminWelcome from "./pages/AdminWelcome";
-import OfficerWelcome from "./pages/OfficerWelcome";
 
 function App() {
   return (
@@ -22,16 +23,15 @@ function App() {
       <Routes>
 
         {/* ================= HOME ================= */}
+        {/* Public page - anyone can open the website */}
+
         <Route
           path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
+          element={<Home />}
         />
 
         {/* ================= AUTH ================= */}
+
         <Route
           path="/login"
           element={<Login />}
@@ -67,8 +67,18 @@ function App() {
           }
         />
 
+        {/* ================= TRACK REQUEST ================= */}
+
+        <Route
+          path="/track"
+          element={
+            <ProtectedRoute allowedRoles={["citizen"]}>
+              <MyComplaints />
+            </ProtectedRoute>
+          }
+        />
+
         {/* ================= COMPLAINT DETAILS ================= */}
-        {/* Citizen + Officer + Admin can view details */}
 
         <Route
           path="/complaint/:id"
@@ -86,10 +96,16 @@ function App() {
         />
 
         {/* ================= OFFICER ================= */}
+
         <Route
           path="/officer-welcome"
-          element={<OfficerWelcome />}
+          element={
+            <ProtectedRoute allowedRoles={["officer"]}>
+              <OfficerWelcome />
+            </ProtectedRoute>
+          }
         />
+
         <Route
           path="/officer-dashboard"
           element={
@@ -100,10 +116,16 @@ function App() {
         />
 
         {/* ================= ADMIN ================= */}
+
         <Route
           path="/admin-welcome"
-          element={<AdminWelcome />}
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminWelcome />
+            </ProtectedRoute>
+          }
         />
+
         <Route
           path="/admin-dashboard"
           element={

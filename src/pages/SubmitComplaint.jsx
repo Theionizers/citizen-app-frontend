@@ -9,36 +9,48 @@ const API_BASE_URL =
 const SubmitComplaint = () => {
   const navigate = useNavigate();
 
+  // ================= DESCRIPTION =================
   const [description, setDescription] = useState("");
 
   // ================= VOICE =================
   const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isTranscribing, setIsTranscribing] =
+    useState(false);
 
   const mediaRecorderRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  // ================= IMAGE =================
+  const [selectedImage, setSelectedImage] =
+    useState(null);
+
+  const imageInputRef = useRef(null);
+
   // ================= LOCATION =================
-  const [locationAdded, setLocationAdded] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationAdded, setLocationAdded] =
+    useState(false);
+  const [locationLoading, setLocationLoading] =
+    useState(false);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
-  const [locationError, setLocationError] = useState("");
+  const [locationError, setLocationError] =
+    useState("");
 
   // ================= SUBMIT =================
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   // =========================================================
   // START RECORDING
   // =========================================================
+
   const startRecording = async () => {
     try {
       setError("");
       setSuccess("");
-      setLocationError("");
 
       if (!navigator.mediaDevices?.getUserMedia) {
         setError(
@@ -53,7 +65,6 @@ const SubmitComplaint = () => {
         });
 
       mediaStreamRef.current = stream;
-
       audioChunksRef.current = [];
 
       let options = {};
@@ -139,6 +150,7 @@ const SubmitComplaint = () => {
   // =========================================================
   // STOP RECORDING
   // =========================================================
+
   const stopRecording = () => {
     const recorder = mediaRecorderRef.current;
 
@@ -157,6 +169,7 @@ const SubmitComplaint = () => {
   // =========================================================
   // TRANSCRIBE AUDIO
   // =========================================================
+
   const transcribeAudio = async (audioBlob) => {
     try {
       setError("");
@@ -179,7 +192,8 @@ const SubmitComplaint = () => {
         [audioBlob],
         `complaint-audio.${extension}`,
         {
-          type: audioBlob.type || "audio/webm",
+          type:
+            audioBlob.type || "audio/webm",
         }
       );
 
@@ -198,9 +212,9 @@ const SubmitComplaint = () => {
         }
       );
 
-      const data = await response.json().catch(
-        () => null
-      );
+      const data = await response
+        .json()
+        .catch(() => null);
 
       if (!response.ok) {
         throw new Error(
@@ -208,12 +222,6 @@ const SubmitComplaint = () => {
             "Failed to transcribe audio."
         );
       }
-
-      /*
-        The backend response may be:
-        - a plain string
-        - an object containing transcript/text
-      */
 
       let transcript = "";
 
@@ -225,11 +233,11 @@ const SubmitComplaint = () => {
         transcript = data.transcript;
       } else if (data?.transcription) {
         transcript = data.transcription;
-      } else if (data?.detail) {
-        transcript = data.detail;
       }
 
-      transcript = String(transcript || "").trim();
+      transcript = String(
+        transcript || ""
+      ).trim();
 
       if (!transcript) {
         throw new Error(
@@ -265,8 +273,54 @@ const SubmitComplaint = () => {
   };
 
   // =========================================================
+  // IMAGE UPLOAD
+  // =========================================================
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+
+    if (!file.type.startsWith("image/")) {
+      setError(
+        "Please select an image file."
+      );
+
+      event.target.value = "";
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      setError(
+        "Image size must be less than 5 MB."
+      );
+
+      event.target.value = "";
+      return;
+    }
+
+    setSelectedImage(file);
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
+  // =========================================================
   // LOCATION
   // =========================================================
+
   const handleAddLocation = () => {
     setLocationError("");
     setError("");
@@ -290,6 +344,7 @@ const SubmitComplaint = () => {
 
         setLatitude(currentLatitude);
         setLongitude(currentLongitude);
+
         setLocationAdded(true);
         setLocationLoading(false);
         setLocationError("");
@@ -339,6 +394,7 @@ const SubmitComplaint = () => {
   // =========================================================
   // SUBMIT COMPLAINT
   // =========================================================
+
   const handleSubmit = async () => {
     const trimmedDescription =
       description.trim();
@@ -370,6 +426,16 @@ const SubmitComplaint = () => {
       setError("");
       setSuccess("");
 
+      /*
+        IMPORTANT:
+        Current backend /complaints endpoint accepts JSON.
+        Therefore selectedImage is intentionally NOT sent yet.
+
+        Once backend attachment API is available,
+        selectedImage can be sent through multipart/form-data
+        without changing this UI.
+      */
+
       const response = await fetch(
         `${API_BASE_URL}/complaints`,
         {
@@ -379,7 +445,8 @@ const SubmitComplaint = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            description: trimmedDescription,
+            description:
+              trimmedDescription,
             latitude,
             longitude,
           }),
@@ -398,12 +465,14 @@ const SubmitComplaint = () => {
       }
 
       setSuccess(
-        "Your complaint has been submitted successfully."
+        selectedImage
+          ? "Complaint submitted. Image is saved in the form and will be connected to backend attachment handling once the API is available."
+          : "Your complaint has been submitted successfully."
       );
 
       setTimeout(() => {
         navigate("/my-complaints");
-      }, 1000);
+      }, 1200);
     } catch (err) {
       console.error(
         "Complaint submission error:",
@@ -424,14 +493,21 @@ const SubmitComplaint = () => {
       <Navbar />
 
       <main className="px-5 pb-16 pt-32 sm:px-8 lg:px-10">
+
         <div className="mx-auto max-w-5xl">
 
-          {/* ================= HEADER ================= */}
+          {/* =================================================
+              HEADER
+          ================================================= */}
+
           <div className="mb-10">
 
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700">
+
               <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+
               CITIZEN SERVICES
+
             </div>
 
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
@@ -439,34 +515,42 @@ const SubmitComplaint = () => {
             </h1>
 
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              Tell us about the problem you're facing. Provide
-              the details below and we'll help route your request
-              to the right department.
+              Tell us about the problem you're facing.
+              Provide the details below and we'll help
+              route your request to the right department.
             </p>
 
           </div>
 
-          {/* ================= FORM CARD ================= */}
+          {/* =================================================
+              MAIN CARD
+          ================================================= */}
+
           <div className="overflow-hidden rounded-3xl border border-orange-200 bg-[#FFFDF9] shadow-xl shadow-orange-900/10">
 
             {/* CARD HEADER */}
+
             <div className="border-b border-orange-100 bg-gradient-to-r from-orange-50/70 to-transparent px-6 py-6 sm:px-8">
 
               <div className="flex items-start gap-4">
 
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white shadow-md shadow-orange-900/20">
-                  <span className="text-lg">✦</span>
+                  <span className="text-lg">
+                    ✦
+                  </span>
                 </div>
 
                 <div>
+
                   <h2 className="text-lg font-bold text-slate-900">
                     Tell us what happened
                   </h2>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    You can describe your issue by typing or
-                    using your voice.
+                    You can describe your issue by
+                    typing or using your voice.
                   </p>
+
                 </div>
 
               </div>
@@ -475,7 +559,10 @@ const SubmitComplaint = () => {
 
             <div className="p-6 sm:p-8">
 
-              {/* ================= DESCRIPTION ================= */}
+              {/* =================================================
+                  DESCRIPTION
+              ================================================= */}
+
               <div className="mb-8">
 
                 <div className="mb-2 flex items-center justify-between">
@@ -499,7 +586,9 @@ const SubmitComplaint = () => {
                   maxLength={1000}
                   value={description}
                   onChange={(e) => {
-                    setDescription(e.target.value);
+                    setDescription(
+                      e.target.value
+                    );
                     setError("");
                   }}
                   placeholder="Explain your problem in your own words..."
@@ -509,8 +598,8 @@ const SubmitComplaint = () => {
                 <div className="mt-2 flex justify-between gap-4">
 
                   <p className="text-xs text-slate-500">
-                    Please provide enough details so we can
-                    understand your issue.
+                    Please provide enough details so
+                    we can understand your issue.
                   </p>
 
                   <span className="shrink-0 text-xs text-slate-400">
@@ -521,7 +610,10 @@ const SubmitComplaint = () => {
 
               </div>
 
-              {/* ================= VOICE ================= */}
+              {/* =================================================
+                  VOICE
+              ================================================= */}
+
               <div className="mb-8">
 
                 <div className="mb-2 flex items-center justify-between">
@@ -551,7 +643,7 @@ const SubmitComplaint = () => {
                     <div className="flex items-center gap-4">
 
                       <div
-                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition ${
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
                           isRecording
                             ? "bg-orange-600 text-white shadow-md shadow-orange-900/20"
                             : isTranscribing
@@ -653,7 +745,125 @@ const SubmitComplaint = () => {
 
               </div>
 
-              {/* ================= LOCATION ================= */}
+              {/* =================================================
+                  IMAGE UPLOAD
+              ================================================= */}
+
+              <div className="mb-8">
+
+                <div className="mb-2 flex items-center justify-between">
+
+                  <label className="text-sm font-semibold text-slate-800">
+                    Supporting Image
+                  </label>
+
+                  <span className="text-xs text-slate-400">
+                    Optional
+                  </span>
+
+                </div>
+
+                {!selectedImage ? (
+                  <label
+                    htmlFor="complaint-image"
+                    className="group flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/30 px-5 py-8 text-center transition-all duration-200 hover:border-orange-400 hover:bg-orange-50"
+                  >
+
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-orange-100 bg-white text-xl text-orange-600 transition-transform duration-200 group-hover:scale-105">
+                      📷
+                    </div>
+
+                    <p className="text-sm font-semibold text-slate-700">
+                      Upload an image
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      JPG, JPEG, PNG • Maximum 5 MB
+                    </p>
+
+                    <p className="mt-2 text-xs text-slate-400">
+                      Example: pothole, broken pipe,
+                      damaged streetlight, garbage issue
+                    </p>
+
+                    <input
+                      ref={imageInputRef}
+                      id="complaint-image"
+                      type="file"
+                      accept="image/jpeg,image/png,image/jpg,image/webp"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+
+                  </label>
+                ) : (
+                  <div className="rounded-2xl border border-orange-200 bg-orange-50/50 p-4">
+
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                      <div className="flex min-w-0 items-center gap-3">
+
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-orange-100 bg-white text-orange-600">
+                          🖼️
+                        </div>
+
+                        <div className="min-w-0">
+
+                          <p className="truncate text-sm font-semibold text-slate-800">
+                            {selectedImage.name}
+                          </p>
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            {(
+                              selectedImage.size /
+                              (1024 * 1024)
+                            ).toFixed(2)}{" "}
+                            MB
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="self-start text-sm font-semibold text-red-500 transition hover:text-red-600 sm:self-auto"
+                      >
+                        Remove
+                      </button>
+
+                    </div>
+
+                    {/* Image preview */}
+
+                    <div className="mt-4 overflow-hidden rounded-xl border border-orange-100 bg-white">
+
+                      <img
+                        src={URL.createObjectURL(
+                          selectedImage
+                        )}
+                        alt="Selected complaint"
+                        className="max-h-72 w-full object-contain"
+                      />
+
+                    </div>
+
+                    <p className="mt-3 text-xs text-slate-400">
+                      Image selected. Backend attachment
+                      upload will be connected when the
+                      attachment API is available.
+                    </p>
+
+                  </div>
+                )}
+
+              </div>
+
+              {/* =================================================
+                  LOCATION
+              ================================================= */}
+
               <div className="mb-8">
 
                 <div className="mb-2 flex items-center justify-between">
@@ -696,19 +906,19 @@ const SubmitComplaint = () => {
                             : "border-orange-100 bg-white text-orange-600"
                         }`}
                       >
-                        <span className="text-lg">
-                          📍
-                        </span>
+                        📍
                       </div>
 
                       <div className="min-w-0">
 
                         <p className="text-sm font-semibold text-slate-800">
+
                           {locationLoading
                             ? "Getting your location..."
                             : locationAdded
                             ? "Location added"
                             : "Add your location"}
+
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
@@ -751,7 +961,7 @@ const SubmitComplaint = () => {
                         Latitude
                       </p>
 
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                      <p className="mt-1 break-all text-sm font-semibold text-slate-800">
                         {latitude}
                       </p>
                     </div>
@@ -761,7 +971,7 @@ const SubmitComplaint = () => {
                         Longitude
                       </p>
 
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                      <p className="mt-1 break-all text-sm font-semibold text-slate-800">
                         {longitude}
                       </p>
                     </div>
@@ -781,7 +991,10 @@ const SubmitComplaint = () => {
 
               </div>
 
-              {/* ================= ERROR ================= */}
+              {/* =================================================
+                  ERROR
+              ================================================= */}
+
               {error && (
                 <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
 
@@ -792,7 +1005,10 @@ const SubmitComplaint = () => {
                 </div>
               )}
 
-              {/* ================= SUCCESS ================= */}
+              {/* =================================================
+                  SUCCESS
+              ================================================= */}
+
               {success && (
                 <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
 
@@ -803,20 +1019,25 @@ const SubmitComplaint = () => {
                 </div>
               )}
 
-              {/* ================= SUBMIT ================= */}
+              {/* =================================================
+                  SUBMIT
+              ================================================= */}
+
               <div className="border-t border-orange-100 pt-6">
 
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 
                   <div>
+
                     <p className="text-sm font-semibold text-slate-800">
                       Ready to submit?
                     </p>
 
                     <p className="mt-1 text-xs text-slate-500">
-                      Your request will be reviewed and routed
-                      to the appropriate department.
+                      Your request will be reviewed and
+                      routed to the appropriate department.
                     </p>
+
                   </div>
 
                   <button
@@ -847,10 +1068,18 @@ const SubmitComplaint = () => {
             </div>
           </div>
 
-          {/* TRUST NOTE */}
+          {/* =================================================
+              TRUST NOTE
+          ================================================= */}
+
           <div className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-500">
-            <span className="text-green-600">✓</span>
+
+            <span className="text-green-600">
+              ✓
+            </span>
+
             Your complaint details will be handled securely.
+
           </div>
 
         </div>
