@@ -5,36 +5,43 @@ import { getCurrentUser, loginUser } from "../api/auth";
 const Login = () => {
   const navigate = useNavigate();
 
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
-const [error, setError] = useState("");
-const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  setError("");
-  setLoading(true);
+    setError("");
+    setLoading(true);
 
-  try {
-    const data = await loginUser({
-      email,
-      password,
-    });
+    try {
+      const data = await loginUser({
+        email,
+        password,
+      });
 
-    localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("access_token", data.access_token);
 
-    const user = await getCurrentUser(data.access_token);
+      const user = await getCurrentUser(data.access_token);
 
-    localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user));
 
-    navigate("/");
-  } catch (error) {
-    setError(error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+
+      if (user.role === "admin") {
+        navigate("/admin-welcome");
+      } else if (user.role === "officer") {
+        navigate("/officer-welcome");
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   return (
@@ -203,7 +210,7 @@ const handleSubmit = async (e) => {
 
 
             {/* FORM */}
-           <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
 
               {/* EMAIL */}
               <div>
@@ -211,17 +218,17 @@ const handleSubmit = async (e) => {
                   htmlFor="email"
                   className="block text-sm font-medium text-slate-700 mb-2"
                 >
-                  Email 
+                  Email
                 </label>
 
                 <input
-  id="email"
-  type="email"
-  value={email}
-  onChange={(e) => setEmail(e.target.value)}
-  placeholder="Enter your email"
-  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
-/> 
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+                />
               </div>
 
 
@@ -249,7 +256,7 @@ const handleSubmit = async (e) => {
                   id="password"
                   type="password"
                   value={password}
-onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                 />
@@ -275,17 +282,17 @@ onChange={(e) => setPassword(e.target.value)}
 
               {/* LOGIN */}
               {error && (
-  <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
-    {error}
-  </p>
-)}
-            <button
-  type="submit"
-  disabled={loading}
-  className="w-full py-3.5 rounded-xl bg-orange-600 text-white font-semibold shadow-lg shadow-orange-600/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
->
-  {loading ? "Signing in..." : "Sign in →"}
-</button>
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 rounded-xl bg-orange-600 text-white font-semibold shadow-lg shadow-orange-600/20 hover:bg-orange-700 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading ? "Signing in..." : "Sign in →"}
+              </button>
 
             </form>
 

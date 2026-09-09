@@ -13,6 +13,8 @@ import ComplaintDetails from "./pages/ComplaintDetails";
 
 import OfficerDashboard from "./pages/OfficerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminWelcome from "./pages/AdminWelcome";
+import OfficerWelcome from "./pages/OfficerWelcome";
 
 function App() {
   return (
@@ -84,7 +86,10 @@ function App() {
         />
 
         {/* ================= OFFICER ================= */}
-
+        <Route
+          path="/officer-welcome"
+          element={<OfficerWelcome />}
+        />
         <Route
           path="/officer-dashboard"
           element={
@@ -95,7 +100,10 @@ function App() {
         />
 
         {/* ================= ADMIN ================= */}
-
+        <Route
+          path="/admin-welcome"
+          element={<AdminWelcome />}
+        />
         <Route
           path="/admin-dashboard"
           element={
