@@ -1,6 +1,8 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import CreateOfficer from "../components/admin/CreateOfficer";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
@@ -453,9 +455,9 @@ export default function AdminDashboard() {
                                     )
                                 }
                                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${activeSection ===
-                                        "dashboard"
-                                        ? "bg-orange-50 text-orange-600"
-                                        : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                    "dashboard"
+                                    ? "bg-orange-50 text-orange-600"
+                                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
                                     }`}
                             >
                                 <span>▦</span>
@@ -474,9 +476,9 @@ export default function AdminDashboard() {
                                     );
                                 }}
                                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${activeSection ===
-                                        "complaints"
-                                        ? "bg-orange-50 font-semibold text-orange-600"
-                                        : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                    "complaints"
+                                    ? "bg-orange-50 font-semibold text-orange-600"
+                                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
                                     }`}
                             >
                                 <span>□</span>
@@ -491,9 +493,9 @@ export default function AdminDashboard() {
                                     )
                                 }
                                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${activeSection ===
-                                        "officers"
-                                        ? "bg-orange-50 font-semibold text-orange-600"
-                                        : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                    "officers"
+                                    ? "bg-orange-50 font-semibold text-orange-600"
+                                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
                                     }`}
                             >
                                 <span>♙</span>
@@ -508,9 +510,9 @@ export default function AdminDashboard() {
                                     )
                                 }
                                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors ${activeSection ===
-                                        "departments"
-                                        ? "bg-orange-50 font-semibold text-orange-600"
-                                        : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                    "departments"
+                                    ? "bg-orange-50 font-semibold text-orange-600"
+                                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
                                     }`}
                             >
                                 <span>▤</span>
@@ -1301,15 +1303,30 @@ export default function AdminDashboard() {
                                 <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-[0_6px_24px_rgba(90,60,30,0.04)]">
 
                                     <div className="border-b border-orange-100 p-6">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <h2 className="text-xl font-bold text-slate-900">
+                                                    Officers
+                                                </h2>
 
-                                        <h2 className="text-xl font-bold text-slate-900">
-                                            Officers
-                                        </h2>
+                                                <p className="mt-1 text-sm text-slate-500">
+                                                    Officers currently available in the system.
+                                                </p>
+                                            </div>
 
-                                        <p className="mt-1 text-sm text-slate-500">
-                                            Officers currently available in the system.
-                                        </p>
-
+                                            <button
+                                                onClick={() => {
+                                                    document
+                                                        .getElementById("create-officer-form")
+                                                        ?.scrollIntoView({
+                                                            behavior: "smooth",
+                                                        });
+                                                }}
+                                                className="w-fit rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+                                            >
+                                                + Create Officer
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {loading ? (
@@ -1373,7 +1390,12 @@ export default function AdminDashboard() {
 
                                         </div>
                                     )}
-
+                                    <div id="create-officer-form">
+                                        <CreateOfficer
+                                            departments={departments}
+                                            onSuccess={fetchAdminData}
+                                        />
+                                    </div>
                                     <div className="border-t border-orange-100 px-6 py-4 text-sm text-slate-400">
                                         {officers.length}{" "}
                                         officer
