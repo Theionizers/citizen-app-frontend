@@ -5,6 +5,16 @@ import {
   useParams,
 } from "react-router-dom";
 
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+} from "react-leaflet";
+
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
 import Navbar from "../components/Navbar";
 import { complaintApi } from "../api/complaints";
 import { officerApi } from "../api/officer";
@@ -92,6 +102,21 @@ const getStatusStyle = (status) => {
   return "bg-slate-50 text-slate-600 border-slate-200";
 };
 
+/* ================= LEAFLET MARKER FIX ================= */
+
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+/* ================= COMPONENT ================= */
+
 export default function ComplaintDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -114,7 +139,10 @@ export default function ComplaintDetails() {
 
   const [userRole, setUserRole] = useState(null);
 
-  const [loading, setLoading] = useState(!passedComplaint);
+  const [loading, setLoading] = useState(
+    !passedComplaint
+  );
+
   const [error, setError] = useState("");
 
   const [selectedStatus, setSelectedStatus] = useState(
@@ -130,9 +158,18 @@ export default function ComplaintDetails() {
   const [statusError, setStatusError] =
     useState("");
 
-  /*
-    Get current logged-in user
-  */
+  /* ================= PHOTOS ================= */
+
+  const [photos, setPhotos] = useState([]);
+
+  const [photosLoading, setPhotosLoading] =
+    useState(true);
+
+  const [photosError, setPhotosError] =
+    useState("");
+
+  /* ================= GET CURRENT USER ================= */
+
   useEffect(() => {
     const token = getToken();
 
@@ -153,7 +190,9 @@ export default function ComplaintDetails() {
         );
 
         if (!response.ok) {
-          throw new Error("Unable to verify user.");
+          throw new Error(
+            "Unable to verify user."
+          );
         }
 
         const data = await response.json();
@@ -166,7 +205,8 @@ export default function ComplaintDetails() {
         );
 
         setError(
-          err.message || "Unable to verify user."
+          err.message ||
+          "Unable to verify user."
         );
 
         setLoading(false);
@@ -176,32 +216,24 @@ export default function ComplaintDetails() {
     loadUser();
   }, []);
 
-  /*
-    Load complaint
+  /* ================= LOAD COMPLAINT ================= */
 
-    Officer:
-    GET /complaints/officer/assigned
-
-    Admin:
-    GET /complaints/admin/{complaint_id}
-
-    Citizen:
-    GET /complaints/{complaint_id}
-  */
   useEffect(() => {
     const loadComplaint = async () => {
       try {
         setError("");
 
         /*
-          Complaint already passed from Dashboard.
-          No API call required.
+          Complaint already passed from dashboard.
         */
+
         if (passedComplaint) {
           setComplaint(passedComplaint);
+
           setSelectedStatus(
             passedComplaint.status || ""
           );
+
           setLoading(false);
           return;
         }
@@ -209,6 +241,7 @@ export default function ComplaintDetails() {
         /*
           Officer
         */
+
         if (userRole === "officer") {
           const assignedComplaints =
             await officerApi.getAssignedComplaints();
@@ -237,10 +270,8 @@ export default function ComplaintDetails() {
 
         /*
           Admin
-
-          Admin has a dedicated endpoint:
-          GET /complaints/admin/{complaint_id}
         */
+
         if (userRole === "admin") {
           const response = await fetch(
             `${API_BASE_URL}/complaints/admin/${id}`,
@@ -261,7 +292,9 @@ export default function ComplaintDetails() {
 
           setComplaint(data);
 
-          setSelectedStatus(data.status || "");
+          setSelectedStatus(
+            data.status || ""
+          );
 
           setLoading(false);
           return;
@@ -270,6 +303,7 @@ export default function ComplaintDetails() {
         /*
           Citizen
         */
+
         if (userRole === "citizen") {
           const data =
             await complaintApi.getById(id);
@@ -307,9 +341,151 @@ export default function ComplaintDetails() {
     passedComplaint,
   ]);
 
-  /*
-    Back navigation according to role/source
-  */
+  /* ================= LOAD COMPLAINT PHOTOS ================= */
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrls = [];
+
+    const loadPhotos = async () => {
+      const token = getToken();
+
+      /*
+        Backend currently allows photo access
+        for assigned officers and admins.
+      */
+
+      if (
+        !token ||
+        (userRole !== "officer" &&
+          userRole !== "admin")
+      ) {
+        setPhotos([]);
+        setPhotosLoading(false);
+        return;
+      }
+
+      try {
+        setPhotosLoading(true);
+        setPhotosError("");
+
+        /*
+          First get photo list
+        */
+
+        const response = await fetch(
+          `${API_BASE_URL}/complaints/${id}/photos`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.detail ||
+            "Failed to load complaint photos."
+          );
+        }
+
+        const photoList = Array.isArray(
+          data.photos
+        )
+          ? data.photos
+          : [];
+
+        /*
+          Now fetch every actual image
+          with Authorization header.
+
+          Normal <img src=""> cannot send
+          our JWT token, so we fetch the
+          image manually and create a blob URL.
+        */
+
+        const loadedPhotos =
+          await Promise.all(
+            photoList.map(async (photo) => {
+              const imageResponse =
+                await fetch(
+                  `${API_BASE_URL}${photo.url}`,
+                  {
+                    method: "GET",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+
+              if (!imageResponse.ok) {
+                throw new Error(
+                  `Failed to load image: ${photo.filename}`
+                );
+              }
+
+              const blob =
+                await imageResponse.blob();
+
+              const objectUrl =
+                URL.createObjectURL(blob);
+
+              objectUrls.push(objectUrl);
+
+              return {
+                ...photo,
+                displayUrl: objectUrl,
+              };
+            })
+          );
+
+        if (!cancelled) {
+          setPhotos(loadedPhotos);
+        }
+      } catch (err) {
+        console.error(
+          "Failed to load complaint photos:",
+          err
+        );
+
+        if (!cancelled) {
+          setPhotosError(
+            err.message ||
+            "Unable to load complaint photos."
+          );
+
+          setPhotos([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setPhotosLoading(false);
+        }
+      }
+    };
+
+    if (id && userRole) {
+      loadPhotos();
+    }
+
+    /*
+      Cleanup blob URLs when component
+      unmounts or effect runs again.
+    */
+
+    return () => {
+      cancelled = true;
+
+      objectUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [id, userRole]);
+
+  /* ================= BACK NAVIGATION ================= */
+
   const handleBack = () => {
     if (
       fromAdminDashboard ||
@@ -330,9 +506,8 @@ export default function ComplaintDetails() {
     navigate("/my-complaints");
   };
 
-  /*
-    Update Officer complaint status
-  */
+  /* ================= UPDATE OFFICER STATUS ================= */
+
   const handleStatusUpdate = async () => {
     if (!complaint || !selectedStatus) {
       return;
@@ -392,9 +567,8 @@ export default function ComplaintDetails() {
     }
   };
 
-  /*
-    Loading state
-  */
+  /* ================= LOADING STATE ================= */
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FFF8F1]">
@@ -402,22 +576,19 @@ export default function ComplaintDetails() {
 
         <main className="px-5 pb-16 pt-8 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-5xl">
-
             <div className="rounded-2xl border border-orange-100 bg-white p-8 text-center shadow-sm">
               <p className="text-sm font-medium text-slate-600">
                 Loading complaint details...
               </p>
             </div>
-
           </div>
         </main>
       </div>
     );
   }
 
-  /*
-    Error state
-  */
+  /* ================= ERROR STATE ================= */
+
   if (error || !complaint) {
     return (
       <div className="min-h-screen bg-[#FFF8F1]">
@@ -446,7 +617,6 @@ export default function ComplaintDetails() {
               </p>
 
             </div>
-
           </div>
         </main>
       </div>
@@ -457,12 +627,11 @@ export default function ComplaintDetails() {
     complaint.status
   );
 
-  /*
-    Role-specific text
-  */
   const isAdmin = userRole === "admin";
   const isOfficer = userRole === "officer";
   const isCitizen = userRole === "citizen";
+
+  /* ================= MAIN UI ================= */
 
   return (
     <div className="min-h-screen bg-[#FFF8F1]">
@@ -472,6 +641,7 @@ export default function ComplaintDetails() {
         <div className="mx-auto max-w-5xl">
 
           {/* ================= BACK ================= */}
+
           <button
             type="button"
             onClick={handleBack}
@@ -484,6 +654,7 @@ export default function ComplaintDetails() {
           </button>
 
           {/* ================= HEADER ================= */}
+
           <div className="mb-8">
 
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-orange-600">
@@ -540,9 +711,11 @@ export default function ComplaintDetails() {
           </div>
 
           {/* ================= MAIN CARD ================= */}
+
           <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-[0_6px_24px_rgba(90,60,30,0.04)] sm:p-8">
 
-            {/* Complaint */}
+            {/* ================= COMPLAINT ================= */}
+
             <div>
 
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -556,11 +729,14 @@ export default function ComplaintDetails() {
 
             </div>
 
-            {/* Information */}
+            {/* ================= INFORMATION ================= */}
+
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
 
               {/* Department */}
+
               <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
+
                 <p className="mb-1 text-xs text-slate-500">
                   Department
                 </p>
@@ -570,10 +746,13 @@ export default function ComplaintDetails() {
                     ? `Department #${complaint.department_id}`
                     : "Not assigned"}
                 </p>
+
               </div>
 
               {/* Service */}
+
               <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+
                 <p className="mb-1 text-xs text-slate-500">
                   Service
                 </p>
@@ -583,9 +762,11 @@ export default function ComplaintDetails() {
                     ? `Service #${complaint.service_id}`
                     : "Not assigned"}
                 </p>
+
               </div>
 
               {/* Expected Resolution */}
+
               <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 sm:col-span-2">
 
                 <p className="mb-1 text-xs text-slate-500">
@@ -600,6 +781,7 @@ export default function ComplaintDetails() {
               </div>
 
               {/* Routing Confidence */}
+
               <div className="rounded-xl border border-green-200 bg-green-50 p-4">
 
                 <p className="mb-1 text-xs text-slate-500">
@@ -619,6 +801,7 @@ export default function ComplaintDetails() {
               </div>
 
               {/* Assigned Officer */}
+
               <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
 
                 <p className="mb-1 text-xs text-slate-500">
@@ -635,50 +818,150 @@ export default function ComplaintDetails() {
 
             </div>
 
-            {/* Location */}
+            {/* ================= SUPPORTING IMAGES ================= */}
+
+            <div className="mt-8">
+
+              <div className="mb-3 flex items-center justify-between">
+
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Supporting Images
+                </p>
+
+                {!photosLoading &&
+                  photos.length > 0 && (
+                    <span className="text-xs font-medium text-slate-400">
+                      {photos.length}{" "}
+                      {photos.length === 1
+                        ? "image"
+                        : "images"}
+                    </span>
+                  )}
+
+              </div>
+
+              {/* Loading */}
+
+              {photosLoading ? (
+                <div className="rounded-xl border border-orange-200 bg-orange-50 p-5">
+
+                  <p className="text-sm text-slate-500">
+                    Loading complaint images...
+                  </p>
+
+                </div>
+              ) : photosError ? (
+                /* Error */
+
+                <div className="rounded-xl border border-red-200 bg-red-50 p-5">
+
+                  <p className="text-sm text-red-600">
+                    {photosError}
+                  </p>
+
+                </div>
+              ) : photos.length === 0 ? (
+                /* No image */
+
+                <div className="rounded-xl border border-orange-200 bg-orange-50 p-5">
+
+                  <p className="text-sm text-slate-500">
+                    No supporting images were
+                    uploaded with this complaint.
+                  </p>
+
+                </div>
+              ) : (
+                /* Images */
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                  {photos.map((photo) => (
+                    <div
+                      key={photo.filename}
+                      className="overflow-hidden rounded-xl border border-orange-200 bg-white"
+                    >
+
+                      <img
+                        src={photo.displayUrl}
+                        alt="Complaint supporting"
+                        className="h-72 w-full object-contain bg-white"
+                      />
+
+                    </div>
+                  ))}
+
+                </div>
+              )}
+
+            </div>
+
+            {/* ================= LOCATION MAP ================= */}
+
             <div className="mt-6">
 
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Location
               </p>
 
-              <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
+              <div className="overflow-hidden rounded-xl border border-orange-200">
 
                 {complaint.latitude != null &&
                   complaint.longitude != null ? (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <MapContainer
+                    center={[
+                      Number(
+                        complaint.latitude
+                      ),
+                      Number(
+                        complaint.longitude
+                      ),
+                    ]}
+                    zoom={15}
+                    scrollWheelZoom={false}
+                    className="h-[350px] w-full"
+                  >
 
-                    <div>
-                      <p className="mb-1 text-xs text-slate-500">
-                        Latitude
-                      </p>
+                    <TileLayer
+                      attribution="&copy; OpenStreetMap contributors"
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
 
-                      <p className="text-sm font-semibold text-slate-800">
-                        {complaint.latitude}
-                      </p>
-                    </div>
+                    <Marker
+                      position={[
+                        Number(
+                          complaint.latitude
+                        ),
+                        Number(
+                          complaint.longitude
+                        ),
+                      ]}
+                    >
 
-                    <div>
-                      <p className="mb-1 text-xs text-slate-500">
-                        Longitude
-                      </p>
+                      <Popup>
+                        Complaint Location
+                      </Popup>
 
-                      <p className="text-sm font-semibold text-slate-800">
-                        {complaint.longitude}
-                      </p>
-                    </div>
+                    </Marker>
+
+                  </MapContainer>
+                ) : (
+                  <div className="bg-orange-50 p-5">
+
+                    <p className="text-sm text-slate-500">
+                      Location was not provided with
+                      this complaint.
+                    </p>
 
                   </div>
-                ) : (
-                  <p className="text-sm text-slate-500">
-                    Location was not provided with this complaint.
-                  </p>
                 )}
 
               </div>
+
             </div>
 
             {/* ================= OFFICER STATUS ================= */}
+
             {isOfficer && (
               <div className="mt-8 rounded-xl border border-orange-200 bg-orange-50/40">
 
@@ -710,6 +993,7 @@ export default function ComplaintDetails() {
                       }}
                       className="w-full rounded-xl border border-orange-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100 sm:max-w-xs"
                     >
+
                       <option value="under_review">
                         Under Review
                       </option>
@@ -721,6 +1005,7 @@ export default function ComplaintDetails() {
                       <option value="resolved">
                         Resolved
                       </option>
+
                     </select>
 
                     <button
@@ -751,10 +1036,12 @@ export default function ComplaintDetails() {
                   )}
 
                 </div>
+
               </div>
             )}
 
-            {/* ================= PROGRESS ================= */}
+            {/* ================= REQUEST PROGRESS ================= */}
+
             <div className="mt-8">
 
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -801,16 +1088,21 @@ export default function ComplaintDetails() {
               </div>
 
               <div className="mt-2 flex justify-between text-[11px] text-slate-500">
+
                 <span>Submitted</span>
+
                 <span>
                   Under Review / In Progress
                 </span>
+
                 <span>Resolved</span>
+
               </div>
 
             </div>
 
-            {/* Last Updated */}
+            {/* ================= LAST UPDATED ================= */}
+
             <div className="mt-8 border-t border-orange-100 pt-5">
 
               <p className="text-xs text-slate-500">

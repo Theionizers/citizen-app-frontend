@@ -14,32 +14,26 @@ const SubmitComplaint = () => {
 
   // ================= VOICE =================
   const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] =
-    useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const audioChunksRef = useRef([]);
 
   // ================= IMAGE =================
-  const [selectedImage, setSelectedImage] =
-    useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const imageInputRef = useRef(null);
 
   // ================= LOCATION =================
-  const [locationAdded, setLocationAdded] =
-    useState(false);
-  const [locationLoading, setLocationLoading] =
-    useState(false);
+  const [locationAdded, setLocationAdded] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
-  const [locationError, setLocationError] =
-    useState("");
+  const [locationError, setLocationError] = useState("");
 
   // ================= SUBMIT =================
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -426,15 +420,7 @@ const SubmitComplaint = () => {
       setError("");
       setSuccess("");
 
-      /*
-        IMPORTANT:
-        Current backend /complaints endpoint accepts JSON.
-        Therefore selectedImage is intentionally NOT sent yet.
-
-        Once backend attachment API is available,
-        selectedImage can be sent through multipart/form-data
-        without changing this UI.
-      */
+      // ================= CREATE COMPLAINT =================
 
       const response = await fetch(
         `${API_BASE_URL}/complaints`,
@@ -445,8 +431,7 @@ const SubmitComplaint = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            description:
-              trimmedDescription,
+            description: trimmedDescription,
             latitude,
             longitude,
           }),
@@ -464,9 +449,44 @@ const SubmitComplaint = () => {
         );
       }
 
+      // ================= UPLOAD IMAGE =================
+
+      if (selectedImage) {
+        const formData = new FormData();
+
+        formData.append(
+          "files",
+          selectedImage
+        );
+
+        const imageResponse = await fetch(
+          `${API_BASE_URL}/complaints/${data.id}/photos`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
+
+        const imageData = await imageResponse
+          .json()
+          .catch(() => null);
+
+        if (!imageResponse.ok) {
+          throw new Error(
+            imageData?.detail ||
+              "Complaint was submitted, but image upload failed."
+          );
+        }
+      }
+
+      // ================= SUCCESS =================
+
       setSuccess(
         selectedImage
-          ? "Complaint submitted. Image is saved in the form and will be connected to backend attachment handling once the API is available."
+          ? "Complaint and image submitted successfully."
           : "Your complaint has been submitted successfully."
       );
 
@@ -493,12 +513,9 @@ const SubmitComplaint = () => {
       <Navbar />
 
       <main className="px-5 pb-16 pt-32 sm:px-8 lg:px-10">
-
         <div className="mx-auto max-w-5xl">
 
-          {/* =================================================
-              HEADER
-          ================================================= */}
+          {/* HEADER */}
 
           <div className="mb-10">
 
@@ -522,9 +539,7 @@ const SubmitComplaint = () => {
 
           </div>
 
-          {/* =================================================
-              MAIN CARD
-          ================================================= */}
+          {/* MAIN CARD */}
 
           <div className="overflow-hidden rounded-3xl border border-orange-200 bg-[#FFFDF9] shadow-xl shadow-orange-900/10">
 
@@ -559,9 +574,7 @@ const SubmitComplaint = () => {
 
             <div className="p-6 sm:p-8">
 
-              {/* =================================================
-                  DESCRIPTION
-              ================================================= */}
+              {/* DESCRIPTION */}
 
               <div className="mb-8">
 
@@ -610,9 +623,7 @@ const SubmitComplaint = () => {
 
               </div>
 
-              {/* =================================================
-                  VOICE
-              ================================================= */}
+              {/* VOICE */}
 
               <div className="mb-8">
 
@@ -745,9 +756,7 @@ const SubmitComplaint = () => {
 
               </div>
 
-              {/* =================================================
-                  IMAGE UPLOAD
-              ================================================= */}
+              {/* IMAGE UPLOAD */}
 
               <div className="mb-8">
 
@@ -850,9 +859,8 @@ const SubmitComplaint = () => {
                     </div>
 
                     <p className="mt-3 text-xs text-slate-400">
-                      Image selected. Backend attachment
-                      upload will be connected when the
-                      attachment API is available.
+                      Image selected. It will be uploaded
+                      with your complaint.
                     </p>
 
                   </div>
@@ -860,9 +868,7 @@ const SubmitComplaint = () => {
 
               </div>
 
-              {/* =================================================
-                  LOCATION
-              ================================================= */}
+              {/* LOCATION */}
 
               <div className="mb-8">
 
@@ -942,11 +948,13 @@ const SubmitComplaint = () => {
                           : "text-orange-600"
                       }`}
                     >
+
                       {locationLoading
                         ? "..."
                         : locationAdded
                         ? "Added ✓"
                         : "Add"}
+
                     </span>
 
                   </div>
@@ -957,6 +965,7 @@ const SubmitComplaint = () => {
                   <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
 
                     <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+
                       <p className="text-xs text-green-700">
                         Latitude
                       </p>
@@ -964,9 +973,11 @@ const SubmitComplaint = () => {
                       <p className="mt-1 break-all text-sm font-semibold text-slate-800">
                         {latitude}
                       </p>
+
                     </div>
 
                     <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+
                       <p className="text-xs text-green-700">
                         Longitude
                       </p>
@@ -974,6 +985,7 @@ const SubmitComplaint = () => {
                       <p className="mt-1 break-all text-sm font-semibold text-slate-800">
                         {longitude}
                       </p>
+
                     </div>
 
                   </div>
@@ -991,9 +1003,7 @@ const SubmitComplaint = () => {
 
               </div>
 
-              {/* =================================================
-                  ERROR
-              ================================================= */}
+              {/* ERROR */}
 
               {error && (
                 <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
@@ -1005,9 +1015,7 @@ const SubmitComplaint = () => {
                 </div>
               )}
 
-              {/* =================================================
-                  SUCCESS
-              ================================================= */}
+              {/* SUCCESS */}
 
               {success && (
                 <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
@@ -1019,9 +1027,7 @@ const SubmitComplaint = () => {
                 </div>
               )}
 
-              {/* =================================================
-                  SUBMIT
-              ================================================= */}
+              {/* SUBMIT */}
 
               <div className="border-t border-orange-100 pt-6">
 
@@ -1056,9 +1062,11 @@ const SubmitComplaint = () => {
                         : "bg-orange-600 shadow-orange-900/20 hover:-translate-y-0.5 hover:bg-orange-700"
                     }`}
                   >
+
                     {isSubmitting
                       ? "Submitting..."
                       : "Submit Complaint →"}
+
                   </button>
 
                 </div>
@@ -1068,9 +1076,7 @@ const SubmitComplaint = () => {
             </div>
           </div>
 
-          {/* =================================================
-              TRUST NOTE
-          ================================================= */}
+          {/* TRUST NOTE */}
 
           <div className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-500">
 

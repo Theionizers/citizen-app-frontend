@@ -68,7 +68,52 @@ export const resendOTP = async (email) => {
   return data;
 };
 
+// ================= FORGOT PASSWORD =================
 
+export const forgotPassword = async (email) => {
+  const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || "Failed to send reset OTP");
+  }
+
+  return data;
+};
+
+
+// ================= RESET PASSWORD =================
+
+export const resetPassword = async (email, otp, new_password) => {
+  const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      otp,
+      new_password,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || "Failed to reset password");
+  }
+
+  return data;
+};
 // ================= LOGIN =================
 
 export const loginUser = async (credentials) => {
