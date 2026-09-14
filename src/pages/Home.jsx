@@ -233,224 +233,247 @@ const Home = () => {
       </section>
 
       {/* ================= FOOTER ================= */}
-     {/* ================= FOOTER ================= */}
-<footer className="border-t border-orange-100 bg-[#FFFDF9]">
+      {/* ================= FOOTER ================= */}
+      <footer className="border-t border-orange-100 bg-[#FFFDF9]">
 
-  <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 lg:px-10">
 
-    <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1.1fr]">
+          <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1.1fr]">
 
-      {/* BRAND */}
-      <div>
-
-        <div className="flex items-center gap-3">
-          <img
-            src="/ozoco-logo.png"
-            alt="OZOCO"
-            className="h-11 w-auto object-contain"
-          />
-
-          <div>
-            <p className="text-lg font-bold text-slate-900">
-              OZOCO Global
-            </p>
-
-            <p className="text-xs text-slate-500">
-              AI Citizen Service Platform
-            </p>
-          </div>
-        </div>
-
-        <p className="mt-5 max-w-sm text-sm leading-7 text-slate-500">
-          Empowering citizens through AI-powered service discovery,
-          intelligent complaint routing, and transparent request tracking.
-        </p>
-
-        {/* Social placeholders */}
-        <div className="mt-6 flex items-center gap-3">
-
-          <a
-            href="#"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-100 bg-white text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
-            aria-label="Facebook"
-          >
-            f
-          </a>
-
-          <a
-            href="#"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-100 bg-white text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
-            aria-label="LinkedIn"
-          >
-            in
-          </a>
-
-          <a
-            href="#"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-100 bg-white text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
-            aria-label="YouTube"
-          >
-            ▶
-          </a>
-
-        </div>
-
-      </div>
-
-      {/* QUICK LINKS */}
-      <div>
-
-        <h3 className="text-base font-bold text-slate-900">
-          Quick Links
-        </h3>
-
-        <div className="mt-4 space-y-3 text-sm text-slate-500">
-
-          <a
-            href="#"
-            className="block transition hover:text-orange-600"
-          >
-            Home
-          </a>
-
-          <a
-            href="#services"
-            className="block transition hover:text-orange-600"
-          >
-            Services
-          </a>
-
-          <a
-            href="#how-it-works"
-            className="block transition hover:text-orange-600"
-          >
-            How It Works
-          </a>
-
-          <a
-            href="#features"
-            className="block transition hover:text-orange-600"
-          >
-            Features
-          </a>
-
-        </div>
-
-      </div>
-
-      {/* CITIZEN SERVICES */}
-      <div>
-
-        <h3 className="text-base font-bold text-slate-900">
-          Citizen Services
-        </h3>
-
-        <div className="mt-4 space-y-3 text-sm text-slate-500">
-
-          <Link
-            to="/submit-complaint"
-            className="block transition hover:text-orange-600"
-          >
-            Submit Complaint
-          </Link>
-
-          <Link
-            to="/my-complaints"
-            className="block transition hover:text-orange-600"
-          >
-            My Requests
-          </Link>
-
-          <Link
-            to="/login"
-            className="block transition hover:text-orange-600"
-          >
-            Login
-          </Link>
-
-          <Link
-            to="/register"
-            className="block transition hover:text-orange-600"
-          >
-            Create Account
-          </Link>
-
-        </div>
-
-      </div>
-
-      {/* CONTACT */}
-      <div>
-
-        <h3 className="text-base font-bold text-slate-900">
-          Contact Us
-        </h3>
-
-        <div className="mt-4 space-y-4 text-sm text-slate-500">
-
-          {/* EMAIL */}
-          <div className="flex items-start gap-3">
-
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
-              ✉
-            </div>
-
-            <div>
-              <p className="text-xs text-slate-400">
-                Email
-              </p>
-
-              <a
-                href="mailto:ozocoai@gmail.com"
-                className="mt-1 block font-medium text-slate-700 transition hover:text-orange-600"
-              >
-                ozocoai@gmail.com
-              </a>
-            </div>
-
-          </div>
-
-          {/* PHONE */}
-          <div className="flex items-start gap-3">
-
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
-              ☎
-            </div>
-
-            <div>
-              <p className="text-xs text-slate-400">
-                Phone
-              </p>
-
-              <a
-                href="tel:9866761432"
-                className="mt-1 block font-medium text-slate-700 transition hover:text-orange-600"
-              >
-                9866761432
-              </a>
-            </div>
-
-          </div>
-
-          {/* ADDRESS */}
-          <div className="flex items-start gap-3">
-
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-700">
-              📍
-            </div>
-
+            {/* BRAND */}
             <div>
 
-              <p className="text-xs text-slate-400">
-                Office
+              <div className="flex items-center gap-3">
+                <img
+                  src="/JanaMaan_logo.png"
+                  alt="OZOCO"
+                  className="h-11 w-auto object-contain"
+                />
+
+                <div>
+                  <p className="text-lg font-bold text-slate-900">
+                    OZOCO Global
+                  </p>
+
+                  <p className="text-xs text-slate-500">
+                    AI Citizen Service Platform
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-5 max-w-sm text-sm leading-7 text-slate-500">
+                Empowering citizens through AI-powered service discovery,
+                intelligent complaint routing, and transparent request tracking.
               </p>
 
-              <p className="mt-1 leading-6 font-medium text-slate-700">
-                Amaravathi Capital City
-                <br />
-                Vijayawada, Andhra Pradesh
-                <br />
-                Pincode: 522503
+              {/* Social placeholders */}
+              <div className="mt-6 flex items-center gap-3">
+
+                <a
+                  href="#"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-100 bg-white text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                  aria-label="Facebook"
+                >
+                  f
+                </a>
+
+                <a
+                  href="#"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-100 bg-white text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                  aria-label="LinkedIn"
+                >
+                  in
+                </a>
+
+                <a
+                  href="#"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-100 bg-white text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                  aria-label="YouTube"
+                >
+                  ▶
+                </a>
+
+              </div>
+
+            </div>
+
+            {/* QUICK LINKS */}
+            <div>
+
+              <h3 className="text-base font-bold text-slate-900">
+                Quick Links
+              </h3>
+
+              <div className="mt-4 space-y-3 text-sm text-slate-500">
+
+                <a
+                  href="#"
+                  className="block transition hover:text-orange-600"
+                >
+                  Home
+                </a>
+
+                <a
+                  href="#services"
+                  className="block transition hover:text-orange-600"
+                >
+                  Services
+                </a>
+
+                <a
+                  href="#how-it-works"
+                  className="block transition hover:text-orange-600"
+                >
+                  How It Works
+                </a>
+
+                <a
+                  href="#features"
+                  className="block transition hover:text-orange-600"
+                >
+                  Features
+                </a>
+
+              </div>
+
+            </div>
+
+            {/* CITIZEN SERVICES */}
+            <div>
+
+              <h3 className="text-base font-bold text-slate-900">
+                Citizen Services
+              </h3>
+
+              <div className="mt-4 space-y-3 text-sm text-slate-500">
+
+                <Link
+                  to="/submit-complaint"
+                  className="block transition hover:text-orange-600"
+                >
+                  Submit Complaint
+                </Link>
+
+                <Link
+                  to="/my-complaints"
+                  className="block transition hover:text-orange-600"
+                >
+                  My Requests
+                </Link>
+
+                <Link
+                  to="/login"
+                  className="block transition hover:text-orange-600"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  to="/register"
+                  className="block transition hover:text-orange-600"
+                >
+                  Create Account
+                </Link>
+
+              </div>
+
+            </div>
+
+            {/* CONTACT */}
+            <div>
+
+              <h3 className="text-base font-bold text-slate-900">
+                Contact Us
+              </h3>
+
+              <div className="mt-4 space-y-4 text-sm text-slate-500">
+
+                {/* EMAIL */}
+                <div className="flex items-start gap-3">
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
+                    ✉
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-400">
+                      Email
+                    </p>
+
+                    <a
+                      href="mailto:ozocoai@gmail.com"
+                      className="mt-1 block font-medium text-slate-700 transition hover:text-orange-600"
+                    >
+                      ozocoai@gmail.com
+                    </a>
+                  </div>
+
+                </div>
+
+                {/* PHONE */}
+                <div className="flex items-start gap-3">
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                    ☎
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-400">
+                      Phone
+                    </p>
+
+                    <a
+                      href="tel:9866761432"
+                      className="mt-1 block font-medium text-slate-700 transition hover:text-orange-600"
+                    >
+                      9866761432
+                    </a>
+                  </div>
+
+                </div>
+
+                {/* ADDRESS */}
+                <div className="flex items-start gap-3">
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                    📍
+                  </div>
+
+                  <div>
+
+                    <p className="text-xs text-slate-400">
+                      Office
+                    </p>
+
+                    <p className="mt-1 leading-6 font-medium text-slate-700">
+                      Amaravathi Capital City
+                      <br />
+                      Vijayawada, Andhra Pradesh
+                      <br />
+                      Pincode: 522503
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* BOTTOM BAR */}
+          <div className="mt-10 border-t border-orange-100 pt-6">
+
+            <div className="flex flex-col gap-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+
+              <p>
+                © {new Date().getFullYear()} OZOCO Global Private Limited
+              </p>
+
+              <p>
+                All Rights Reserved
               </p>
 
             </div>
@@ -459,30 +482,7 @@ const Home = () => {
 
         </div>
 
-      </div>
-
-    </div>
-
-    {/* BOTTOM BAR */}
-    <div className="mt-10 border-t border-orange-100 pt-6">
-
-      <div className="flex flex-col gap-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-
-        <p>
-          © {new Date().getFullYear()} OZOCO Global Private Limited
-        </p>
-
-        <p>
-          All Rights Reserved
-        </p>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</footer>
+      </footer>
 
     </div>
   );

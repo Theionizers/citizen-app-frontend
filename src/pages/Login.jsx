@@ -67,7 +67,7 @@ const Login = () => {
           {/* HEADER */}
           <div className="relative z-10 flex items-center gap-3">
             <img
-              src="/ozoco-logo.png"
+              src="/JanaMaan_logo.png"
               alt="OZOCO"
               className="h-15 w-auto object-contain"
             />
@@ -176,7 +176,7 @@ const Login = () => {
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center gap-3 mb-10">
               <img
-                src="/ozoco-logo.png"
+                src="/JanaMaan_logo.png"
                 alt="OZOCO"
                 className="h-10 w-auto object-contain"
               />

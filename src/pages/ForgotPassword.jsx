@@ -25,7 +25,7 @@ const ForgotPassword = () => {
           {/* LOGO */}
           <div className="relative z-10">
             <img
-              src="/ozoco-logo.png"
+              src="/JanaMaan_logo.png"
               alt="OZOCO"
               className="h-12 w-auto object-contain"
             />
@@ -152,7 +152,7 @@ const ForgotPassword = () => {
             <div className="lg:hidden mb-8">
 
               <img
-                src="/ozoco-logo.png"
+                src="/JanaMaan_logo.png"
                 alt="OZOCO"
                 className="h-10 w-auto object-contain"
               />

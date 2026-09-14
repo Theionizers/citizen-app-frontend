@@ -78,7 +78,7 @@ available links and buttons.
 citizen-app-frontend/
 │
 ├── public/
-│   └── ozoco-logo.png
+│   └── JanaMaan_logo.png
 │
 ├── src/
 │   │

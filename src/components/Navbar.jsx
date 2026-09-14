@@ -183,10 +183,10 @@ export default function Navbar() {
     role === "admin"
       ? "/admin-dashboard"
       : role === "officer"
-      ? "/officer-dashboard"
-      : role === "department"
-      ? "/department-dashboard"
-      : null;
+        ? "/officer-dashboard"
+        : role === "department"
+          ? "/department-dashboard"
+          : null;
 
   /* =====================================================
      ACTIVE LINK
@@ -209,7 +209,7 @@ export default function Navbar() {
             MAIN NAVBAR
         ===================================================== */}
 
-        <div className="flex min-h-[72px] items-center gap-2 px-3 py-3 min-[380px]:gap-3 min-[420px]:px-4 sm:gap-4 sm:px-5 lg:gap-5 lg:px-6">
+        <div className="flex min-h-[92px] items-center gap-2 px-3 py-3 min-[380px]:gap-3 min-[420px]:px-4 sm:gap-4 sm:px-5 lg:gap-5 lg:px-6">
 
           {/* ===================================================
               MOBILE MENU BUTTON
@@ -234,12 +234,20 @@ export default function Navbar() {
           <Link
             to="/"
             onClick={() => setMobileOpen(false)}
-            className="flex shrink-0 items-center"
+            className="flex h-[76px] shrink-0 items-center rounded-xl px-2 sm:h-[82px] sm:px-3"
           >
+            {/* Desktop Logo */}
             <img
-              src="/ozoco-logo.png"
-              alt="OZOCO"
-              className="h-9 w-[88px] object-contain min-[380px]:h-10 min-[380px]:w-24 min-[420px]:h-11 min-[420px]:w-28 sm:h-12 sm:w-32"
+              src="/JanaMaan_logo.png"
+              alt="JanaMaan - Powered by OZOCO"
+              className="hidden h-[68px] w-auto max-w-[230px] object-contain sm:block lg:h-[74px] lg:max-w-[250px]"
+            />
+
+            {/* Mobile Logo */}
+            <img
+              src="/JanaMaan_logoMobile.png"
+              alt="JanaMaan"
+              className="h-14 w-14 object-contain sm:hidden"
             />
           </Link>
 
@@ -278,12 +286,11 @@ export default function Navbar() {
                 {role === "citizen" && (
                   <Link
                     to="/my-complaints"
-                    className={`rounded-xl border px-2.5 py-2 text-[10px] font-semibold transition-all duration-200 min-[380px]:px-3 min-[380px]:text-xs ${
-                      location.pathname ===
-                      "/my-complaints"
+                    className={`rounded-xl border px-2.5 py-2 text-[10px] font-semibold transition-all duration-200 min-[380px]:px-3 min-[380px]:text-xs ${location.pathname ===
+                        "/my-complaints"
                         ? "border-orange-200 bg-orange-100 text-orange-700"
                         : "border-orange-100 bg-orange-50 text-orange-700 hover:border-orange-200 hover:bg-orange-100"
-                    }`}
+                      }`}
                   >
                     My Requests
                   </Link>
@@ -299,12 +306,11 @@ export default function Navbar() {
                   dashboardPath && (
                     <Link
                       to={dashboardPath}
-                      className={`hidden rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-200 min-[600px]:block ${
-                        location.pathname ===
-                        dashboardPath
+                      className={`hidden rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-200 min-[600px]:block ${location.pathname ===
+                          dashboardPath
                           ? "border-orange-200 bg-orange-100 text-orange-700"
                           : "border-orange-100 bg-orange-50 text-orange-700 hover:border-orange-200 hover:bg-orange-100"
-                      }`}
+                        }`}
                     >
                       Dashboard
                     </Link>
@@ -351,11 +357,10 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 to={link.path}
-                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                  isActive(link.path)
+                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-200 ${isActive(link.path)
                     ? "bg-orange-50 text-orange-600"
                     : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
@@ -392,12 +397,11 @@ export default function Navbar() {
             {role === "citizen" && (
               <Link
                 to="/submit-complaint"
-                className={`rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ${
-                  location.pathname ===
-                  "/submit-complaint"
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ${location.pathname ===
+                    "/submit-complaint"
                     ? "bg-orange-700 text-white"
                     : "bg-orange-600 text-white hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md"
-                }`}
+                  }`}
               >
                 Submit Complaint
               </Link>
@@ -440,7 +444,7 @@ export default function Navbar() {
               <div className="mb-4 rounded-2xl border border-orange-100 bg-orange-50/60 px-4 py-3">
 
                 <p className="text-sm font-semibold text-slate-800">
-                  Welcome to OZOCO
+                  Welcome to JanaMaan
                 </p>
 
                 <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -462,12 +466,12 @@ export default function Navbar() {
 
                   <p className="text-sm font-semibold capitalize text-slate-800">
                     {role === "citizen"
-                      ? "My OZOCO"
+                      ? "My JanaMaan"
                       : `${role} Portal`}
                   </p>
 
                   <p className="mt-0.5 text-xs text-slate-500">
-                    OZOCO Service Platform
+                    Powered by OZOCO
                   </p>
 
                 </div>
@@ -498,11 +502,10 @@ export default function Navbar() {
                   onClick={() =>
                     setMobileOpen(false)
                   }
-                  className={`block rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                    isActive(link.path)
+                  className={`block rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${isActive(link.path)
                       ? "bg-orange-50 font-semibold text-orange-600"
                       : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>

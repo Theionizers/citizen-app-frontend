@@ -28,7 +28,7 @@ const AdminWelcome = () => {
 
                                 <div>
                                     <img
-                                        src="/ozoco-logo.png"
+                                        src="/JanaMaan_logo.png"
                                         alt="OZOCO"
                                         className="h-12 w-auto object-contain"
                                     />
