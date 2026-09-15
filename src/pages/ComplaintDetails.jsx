@@ -168,7 +168,7 @@ export default function ComplaintDetails() {
   const [photosError, setPhotosError] =
     useState("");
 
-  /* ================= GET CURRENT USER ================= */
+  /*GET CURRENT USER  */
 
   useEffect(() => {
     const token = getToken();
@@ -216,7 +216,7 @@ export default function ComplaintDetails() {
     loadUser();
   }, []);
 
-  /* ================= LOAD COMPLAINT ================= */
+  /*  LOAD COMPLAINT */
 
   useEffect(() => {
     const loadComplaint = async () => {
@@ -341,7 +341,7 @@ export default function ComplaintDetails() {
     passedComplaint,
   ]);
 
-  /* ================= LOAD COMPLAINT PHOTOS ================= */
+  /*  LOAD COMPLAINT PHOTOS  */
 
   useEffect(() => {
     let cancelled = false;
@@ -355,11 +355,7 @@ export default function ComplaintDetails() {
         for assigned officers and admins.
       */
 
-      if (
-        !token ||
-        (userRole !== "officer" &&
-          userRole !== "admin")
-      ) {
+      if (!token) {
         setPhotos([]);
         setPhotosLoading(false);
         return;
@@ -1052,36 +1048,36 @@ export default function ComplaintDetails() {
 
                 <div
                   className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 1
-                      ? "bg-orange-500"
-                      : "bg-slate-300"
+                    ? "bg-orange-500"
+                    : "bg-slate-300"
                     }`}
                 />
 
                 <div
                   className={`h-1 flex-1 ${progressStep >= 2
-                      ? "bg-orange-500"
-                      : "bg-slate-200"
+                    ? "bg-orange-500"
+                    : "bg-slate-200"
                     }`}
                 />
 
                 <div
                   className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 2
-                      ? "bg-orange-500"
-                      : "bg-slate-300"
+                    ? "bg-orange-500"
+                    : "bg-slate-300"
                     }`}
                 />
 
                 <div
                   className={`h-1 flex-1 ${progressStep >= 3
-                      ? "bg-green-500"
-                      : "bg-slate-200"
+                    ? "bg-green-500"
+                    : "bg-slate-200"
                     }`}
                 />
 
                 <div
                   className={`h-3 w-3 shrink-0 rounded-full ${progressStep >= 3
-                      ? "bg-green-500"
-                      : "bg-slate-300"
+                    ? "bg-green-500"
+                    : "bg-slate-300"
                     }`}
                 />
 
