@@ -3,10 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import VoiceRecorder from "../components/VoiceRecorder";
 import LocationPicker from "../components/LocationPicker";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://127.0.0.1:8000";
+import { API_BASE_URL } from "../api/config";
 
 const SubmitComplaint = () => {
   const navigate = useNavigate();

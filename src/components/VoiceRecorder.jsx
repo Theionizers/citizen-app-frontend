@@ -1,8 +1,7 @@
 import { useRef, useState } from "react";
+import { API_BASE_URL } from "../api/config";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://127.0.0.1:8000";
+const TARGET_SAMPLE_RATE = 16000;
 
 const VoiceRecorder = ({ onTranscription }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -14,7 +13,51 @@ const VoiceRecorder = ({ onTranscription }) => {
   const mediaStreamRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  // Convert recorded browser audio into WAV
+  const resampleAudio = (
+    samples,
+    originalSampleRate
+  ) => {
+    if (
+      originalSampleRate ===
+      TARGET_SAMPLE_RATE
+    ) {
+      return samples;
+    }
+
+    const ratio =
+      originalSampleRate /
+      TARGET_SAMPLE_RATE;
+
+    const newLength = Math.max(
+      1,
+      Math.round(samples.length / ratio)
+    );
+
+    const result =
+      new Float32Array(newLength);
+
+    for (
+      let i = 0;
+      i < newLength;
+      i++
+    ) {
+      const position = i * ratio;
+      const before = Math.floor(position);
+      const after = Math.min(
+        before + 1,
+        samples.length - 1
+      );
+      const weight = position - before;
+
+      result[i] =
+        samples[before] * (1 - weight) +
+        samples[after] * weight;
+    }
+
+    return result;
+  };
+
+  // Convert recorded browser audio into mono 16 kHz WAV
   const convertToWav = async (audioBlob) => {
     const arrayBuffer =
       await audioBlob.arrayBuffer();
@@ -30,22 +73,49 @@ const VoiceRecorder = ({ onTranscription }) => {
         arrayBuffer
       );
 
-    const numberOfChannels =
-      audioBuffer.numberOfChannels;
-
     const sampleRate =
       audioBuffer.sampleRate;
 
-    const samples =
+    const frameCount =
       audioBuffer.length;
 
-    const bytesPerSample = 2;
+    const mixedSamples =
+      new Float32Array(frameCount);
 
-    const blockAlign =
-      numberOfChannels * bytesPerSample;
+    for (
+      let channel = 0;
+      channel < audioBuffer.numberOfChannels;
+      channel++
+    ) {
+      const channelData =
+        audioBuffer.getChannelData(
+          channel
+        );
+
+      for (
+        let i = 0;
+        i < frameCount;
+        i++
+      ) {
+        mixedSamples[i] +=
+          channelData[i] /
+          audioBuffer.numberOfChannels;
+      }
+    }
+
+    const monoSamples = resampleAudio(
+      mixedSamples,
+      sampleRate
+    );
+
+    const bytesPerSample = 2;
+    const numberOfChannels = 1;
+    const blockAlign = bytesPerSample;
+    const dataSize =
+      monoSamples.length * blockAlign;
 
     const buffer = new ArrayBuffer(
-      44 + samples * blockAlign
+      44 + dataSize
     );
 
     const view = new DataView(buffer);
@@ -70,7 +140,7 @@ const VoiceRecorder = ({ onTranscription }) => {
 
     view.setUint32(
       4,
-      36 + samples * blockAlign,
+      36 + dataSize,
       true
     );
 
@@ -88,13 +158,13 @@ const VoiceRecorder = ({ onTranscription }) => {
 
     view.setUint32(
       24,
-      sampleRate,
+      TARGET_SAMPLE_RATE,
       true
     );
 
     view.setUint32(
       28,
-      sampleRate * blockAlign,
+      TARGET_SAMPLE_RATE * blockAlign,
       true
     );
 
@@ -114,57 +184,36 @@ const VoiceRecorder = ({ onTranscription }) => {
 
     view.setUint32(
       40,
-      samples * blockAlign,
+      dataSize,
       true
     );
-
-    const channels = [];
-
-    for (
-      let channel = 0;
-      channel < numberOfChannels;
-      channel++
-    ) {
-      channels.push(
-        audioBuffer.getChannelData(
-          channel
-        )
-      );
-    }
 
     let offset = 44;
 
     for (
       let i = 0;
-      i < samples;
+      i < monoSamples.length;
       i++
     ) {
-      for (
-        let channel = 0;
-        channel < numberOfChannels;
-        channel++
-      ) {
-        let sample =
-          channels[channel][i];
+      let sample = monoSamples[i];
 
-        sample = Math.max(
-          -1,
-          Math.min(1, sample)
-        );
+      sample = Math.max(
+        -1,
+        Math.min(1, sample)
+      );
 
-        const intSample =
-          sample < 0
-            ? sample * 0x8000
-            : sample * 0x7fff;
+      const intSample =
+        sample < 0
+          ? sample * 0x8000
+          : sample * 0x7fff;
 
-        view.setInt16(
-          offset,
-          intSample,
-          true
-        );
+      view.setInt16(
+        offset,
+        intSample,
+        true
+      );
 
-        offset += 2;
-      }
+      offset += 2;
     }
 
     await audioContext.close();
@@ -279,9 +328,25 @@ const VoiceRecorder = ({ onTranscription }) => {
         return;
       }
 
+      if (!window.MediaRecorder) {
+        setError(
+          "Audio recording is not supported by this browser."
+        );
+        return;
+      }
+
       const stream =
         await navigator.mediaDevices.getUserMedia(
-          { audio: true }
+          {
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+              channelCount: { ideal: 1 },
+              sampleRate: { ideal: 48000 },
+              sampleSize: { ideal: 16 },
+            },
+          }
         );
 
       mediaStreamRef.current = stream;
@@ -289,22 +354,21 @@ const VoiceRecorder = ({ onTranscription }) => {
 
       let options = {};
 
-      if (
+      const supportedMimeType = [
+        "audio/webm;codecs=opus",
+        "audio/ogg;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+      ].find((mimeType) =>
         MediaRecorder.isTypeSupported(
-          "audio/webm;codecs=opus"
+          mimeType
         )
-      ) {
+      );
+
+      if (supportedMimeType) {
         options = {
-          mimeType:
-            "audio/webm;codecs=opus",
-        };
-      } else if (
-        MediaRecorder.isTypeSupported(
-          "audio/webm"
-        )
-      ) {
-        options = {
-          mimeType: "audio/webm",
+          mimeType: supportedMimeType,
+          audioBitsPerSecond: 128000,
         };
       }
 
@@ -351,6 +415,8 @@ const VoiceRecorder = ({ onTranscription }) => {
           mediaStreamRef.current =
             null;
 
+          setIsTranscribing(true);
+
           // Convert recording → WAV
           const wavBlob =
             await convertToWav(
@@ -375,7 +441,7 @@ const VoiceRecorder = ({ onTranscription }) => {
         }
       };
 
-      recorder.start();
+      recorder.start(1000);
 
       setIsRecording(true);
     } catch (err) {
@@ -420,6 +486,13 @@ const VoiceRecorder = ({ onTranscription }) => {
     if (
       recorder.state !== "inactive"
     ) {
+      if (
+        recorder.state === "recording" &&
+        recorder.requestData
+      ) {
+        recorder.requestData();
+      }
+
       recorder.stop();
     }
 
