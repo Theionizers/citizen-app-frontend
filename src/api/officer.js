@@ -45,7 +45,7 @@ export const officerApi = {
     return result;
   },
 
-  updateStatus: async (complaintId, status) => {
+  updateStatus: async (complaintId, status, officerNote = "") => {
     const response = await fetch(
       `${API_BASE_URL}/complaints/${complaintId}/status`,
       {
@@ -53,6 +53,9 @@ export const officerApi = {
         headers: authHeaders(),
         body: JSON.stringify({
           status,
+          ...(officerNote.trim()
+            ? { officer_note: officerNote.trim() }
+            : {}),
         }),
       }
     );

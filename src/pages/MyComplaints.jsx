@@ -549,6 +549,20 @@ const MyComplaints = () => {
 
                       </div>
 
+                      {complaint.officer_note && (
+                        <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
+
+                          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                            Latest Update
+                          </p>
+
+                          <p className="mt-2 text-sm leading-6 text-slate-700">
+                            {complaint.officer_note}
+                          </p>
+
+                        </div>
+                      )}
+
                       {/* FOOTER */}
                       <div className="mt-6 flex justify-end border-t border-orange-100 pt-5">
 

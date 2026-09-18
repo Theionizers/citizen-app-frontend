@@ -127,9 +127,6 @@ export default function ComplaintDetails() {
   const fromAdminDashboard =
     location.state?.fromAdminDashboard === true;
 
-  const fromCitizenRequests =
-    location.state?.fromCitizenRequests === true;
-
   const [complaint, setComplaint] = useState(
     passedComplaint || null
   );
@@ -145,6 +142,8 @@ export default function ComplaintDetails() {
   const [selectedStatus, setSelectedStatus] = useState(
     passedComplaint?.status || ""
   );
+
+  const [officerNote, setOfficerNote] = useState("");
 
   const [updatingStatus, setUpdatingStatus] =
     useState(false);
@@ -499,7 +498,7 @@ export default function ComplaintDetails() {
     navigate("/my-complaints");
   };
 
-  /* ================= UPDATE OFFICER STATUS ================= */
+  /* ================= UPDATE STATUS ================= */
 
   const handleStatusUpdate = async () => {
     if (!complaint || !selectedStatus) {
@@ -524,15 +523,32 @@ export default function ComplaintDetails() {
       return;
     }
 
+    if (
+      newStatus === "in progress" &&
+      !officerNote.trim()
+    ) {
+      setStatusError(
+        "A note is required when setting a complaint to In Progress."
+      );
+      setStatusMessage("");
+      return;
+    }
+
     try {
       setUpdatingStatus(true);
       setStatusError("");
       setStatusMessage("");
 
-      const updatedComplaint =
-        await officerApi.updateStatus(
+      const updatedComplaint = isAdmin
+        ? await complaintApi.updateAdminStatus(
           complaint.id,
-          selectedStatus
+          selectedStatus,
+          officerNote
+        )
+        : await officerApi.updateStatus(
+          complaint.id,
+          selectedStatus,
+          officerNote
         );
 
       setComplaint(updatedComplaint);
@@ -545,6 +561,7 @@ export default function ComplaintDetails() {
       setStatusMessage(
         "Complaint status updated successfully."
       );
+      setOfficerNote("");
     } catch (err) {
       console.error(
         "Failed to update complaint status:",
@@ -623,6 +640,12 @@ export default function ComplaintDetails() {
   const isAdmin = userRole === "admin";
   const isOfficer = userRole === "officer";
   const isCitizen = userRole === "citizen";
+  const currentStatus = normalizeStatus(complaint.status);
+  const canUpdateStatus =
+    (isOfficer &&
+      currentStatus !== "resolved" &&
+      currentStatus !== "closed") ||
+    (isAdmin && currentStatus !== "closed");
 
   /* ================= MAIN UI ================= */
 
@@ -953,9 +976,23 @@ export default function ComplaintDetails() {
 
             </div>
 
-            {/* ================= OFFICER STATUS ================= */}
+            {isCitizen && complaint.officer_note && (
+              <div className="mt-8 rounded-xl border border-blue-200 bg-blue-50 p-5">
 
-            {isOfficer && (
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                  Latest Update
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {complaint.officer_note}
+                </p>
+
+              </div>
+            )}
+
+            {/* ================= STATUS UPDATE ================= */}
+
+            {canUpdateStatus && (
               <div className="mt-8 rounded-xl border border-orange-200 bg-orange-50/40">
 
                 <div className="border-b border-orange-200 px-5 py-4">
@@ -995,11 +1032,37 @@ export default function ComplaintDetails() {
                         In Progress
                       </option>
 
-                      <option value="resolved">
-                        Resolved
-                      </option>
+                      {isAdmin && (
+                        <>
+                          <option value="resolved">
+                            Resolved
+                          </option>
+
+                          <option value="closed">
+                            Closed
+                          </option>
+                        </>
+                      )}
 
                     </select>
+
+                    <label className="w-full sm:max-w-sm">
+                      <span className="sr-only">
+                        Status note
+                      </span>
+
+                      <textarea
+                        value={officerNote}
+                        onChange={(e) => {
+                          setOfficerNote(e.target.value);
+                          setStatusError("");
+                          setStatusMessage("");
+                        }}
+                        placeholder="Add a status note"
+                        rows={3}
+                        className="w-full rounded-xl border border-orange-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                      />
+                    </label>
 
                     <button
                       type="button"
