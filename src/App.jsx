@@ -16,6 +16,7 @@ import OfficerWelcome from "./pages/OfficerWelcome";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminWelcome from "./pages/AdminWelcome";
+import CitizenChatbot from "./components/CitizenChatbot";
 
 function App() {
   return (
@@ -136,6 +137,7 @@ function App() {
         />
 
       </Routes>
+      <CitizenChatbot/>
     </BrowserRouter>
   );
 }

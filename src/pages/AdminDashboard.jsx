@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import CreateOfficer from "../components/admin/CreateOfficer";
 import { API_BASE_URL } from "../api/config";
+import ExportComplaints from "../components/admin/ExportComplaints";
 
 const getToken = () => {
     return localStorage.getItem("access_token");
@@ -898,6 +899,7 @@ export default function AdminDashboard() {
                                                     }
                                                     className="rounded-xl border border-orange-100 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
                                                 >
+                                                    
                                                     <option value="all">
                                                         All Status
                                                     </option>
@@ -930,6 +932,7 @@ export default function AdminDashboard() {
                                                         Closed
                                                     </option>
                                                 </select>
+                                                <ExportComplaints />
 
                                             </div>
 
